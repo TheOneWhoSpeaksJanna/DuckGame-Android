@@ -12,40 +12,37 @@ using SDL3;
 
 [assembly: UsesPermission(Android.Manifest.Permission.Internet)]
 [assembly: UsesPermission(Android.Manifest.Permission.AccessNetworkState)]
+[assembly: UsesPermission(Android.Manifest.Permission.Vibrate)]
+[assembly: UsesPermission(Android.Manifest.Permission.SystemAlertWindow)]
 [assembly: UsesFeature("android.hardware.touchscreen", Required = false)]
 [assembly: UsesFeature("android.hardware.screen.landscape")]
 
 namespace DuckGame.Android
 {
     /// <summary>
-    /// FNA/XNA Android activity. Hosts a TextureView (so Android gives us a
-    /// SurfaceTexture-backed Surface we can turn into an ANativeWindow), hands
-    /// that native window + screen resolution to the patched SDL3 Android
-    /// driver, then runs the real Duck Game game loop on a background thread.
-    /// No game logic is modified.
+    /// FNA/XNA Android activity. Hosts a SurfaceView (Android's UI toolkit that
+    /// owns an ANativeWindow), hands that native window + screen resolution to
+    /// the patched SDL3 Android driver, then runs the real Duck Game game loop
+    /// on a background thread. No game logic is modified.
     ///
-    /// We use a TextureView (NOT a SurfaceView) because a SurfaceView's EGL
-    /// layer is a separate SurfaceFlinger hardware layer that software-only
-    /// emulators (e.g. redroid) cannot composite, producing a black screen.
-    /// A TextureView's content is composited as a regular View into the app's
-    /// own window surface, which those emulators CAN display. On real devices
-    /// either approach works; TextureView is the safe, portable choice.
+    /// A SurfaceView (not a TextureView) is required: SDL's EGL surface is
+    /// created directly on the SurfaceView's ANativeWindow, which is the
+    /// displayable layer. A TextureView's surface goes through an unconsumed
+    /// SurfaceTexture and never appears. On real devices the SurfaceView layer
+    /// composites normally; this is the standard SDL-for-Android setup.
     ///
-    /// The TextureView's SurfaceTexture is wrapped in a Surface, converted to an
-    /// ANativeWindow* by the patched SDL3 (ANativeWindow_fromSurface), and that
-    /// is what FNA/SDL renders its EGL surface into.
-    ///
-    /// The surface callback fires on the main (UI) thread, so the game loop runs
-    /// on a separate thread and waits for the surface before initing video.
+    /// The surface callback is dispatched on the main (UI) thread's looper, so
+    /// the game loop must run on a separate thread and wait for the surface to
+    /// be ready before it inits video (otherwise SDL_CreateWindow gets a NULL
+    /// window). This mirrors SDL's own Java activity threading model.
     /// </summary>
     [Activity(Label = "Duck Game", Icon = "@drawable/icon", MainLauncher = true, Theme = "@android:style/Theme.NoTitleBar.Fullscreen",
               ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenSize,
               HardwareAccelerated = true, ScreenOrientation = ScreenOrientation.Landscape)]
-    public class MainActivity : Activity, TextureView.ISurfaceTextureListener
+    public class MainActivity : Activity, ISurfaceHolderCallback
     {
         private TouchGamepadView _gamepad;
-        private TextureView _textureView;
-        private global::Android.Views.Surface _renderSurface;
+        private SurfaceView _surfaceView;
         private readonly ManualResetEvent _surfaceReady = new ManualResetEvent(false);
 
         // --- Patched SDL3 Android bridge (exported from libSDL3.so) ---
@@ -103,21 +100,39 @@ namespace DuckGame.Android
                 Window.Attributes.LayoutInDisplayCutoutMode = global::Android.Views.LayoutInDisplayCutoutMode.ShortEdges;
             }
 
-            // TextureView: Android View that owns a SurfaceTexture we can turn
-            // into an ANativeWindow for SDL. Its content is composited into the
-            // app window (visible even on software-only emulators). Add it
-            // FIRST so the on-screen touch controls (added after) sit on top.
-            _textureView = new TextureView(this);
-            _textureView.SurfaceTextureListener = this;
-            AddContentView(_textureView, new ViewGroup.LayoutParams(
+            // SurfaceView owns the ANativeWindow we hand to SDL. Make it the
+            // content view; the on-screen touch gamepad is layered on top.
+            _surfaceView = new SurfaceView(this);
+            AddContentView(_surfaceView, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            _surfaceView.Holder.AddCallback(this);
 
-            // On-screen touch gamepad overlay (injects real SDL keys; game is unmodified).
-            // Added AFTER the TextureView so it renders on top of the game.
+            // On-screen touch gamepad. Try to float it above the SurfaceView via
+            // its own WindowManager overlay (needs SYSTEM_ALERT_WINDOW); if that
+            // isn't permitted, fall back to a normal content view so the
+            // controls still exist.
             _gamepad = new TouchGamepadView(this);
             _gamepad.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
-            AddContentView(_gamepad, new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            try
+            {
+                var lp = new WindowManagerLayoutParams(
+                    ViewGroup.LayoutParams.MatchParent,
+                    ViewGroup.LayoutParams.MatchParent,
+                    WindowManagerTypes.ApplicationOverlay,
+                    WindowManagerFlags.NotFocusable | WindowManagerFlags.LayoutInScreen,
+                    global::Android.Graphics.Format.Translucent)
+                {
+                    Gravity = GravityFlags.Fill
+                };
+                var wm = GetSystemService(WindowService).JavaCast<IWindowManager>();
+                wm.AddView(_gamepad, lp);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("DuckGame", "Touch overlay window failed, using content view: " + ex.Message);
+                AddContentView(_gamepad, new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            }
 
             // Run the real game loop on a background thread; the main (UI) thread
             // stays free so the surface callback can fire and hand SDL the window.
@@ -131,9 +146,8 @@ namespace DuckGame.Android
 
         private void RunGameLoop()
         {
-            // Wait until the SurfaceTexture is available (on the UI thread) and
-            // has handed SDL the ANativeWindow, otherwise SDL_CreateWindow gets
-            // a NULL window.
+            // Wait until SurfaceCreated (on the UI thread) has handed SDL the
+            // ANativeWindow, otherwise SDL_CreateWindow gets a NULL window.
             _surfaceReady.WaitOne();
             try
             {
@@ -148,25 +162,22 @@ namespace DuckGame.Android
             }
         }
 
-        // TextureView.ISurfaceTextureListener: a renderable Surface is ready here (UI thread).
-        public void OnSurfaceTextureAvailable(global::Android.Graphics.SurfaceTexture surfaceTexture, int width, int height)
+        // ISurfaceHolderCallback: the native window is ready here (UI thread).
+        public void SurfaceCreated(ISurfaceHolder holder)
         {
             try
             {
-                // Wrap the SurfaceTexture in a Surface, then hand SDL a JNIEnv*
-                // + the Surface jobject so it can build the ANativeWindow.
-                _renderSurface = new global::Android.Views.Surface(surfaceTexture);
                 IntPtr env = global::Android.Runtime.JNIEnv.Handle;
-                IntPtr surface = global::Android.Runtime.JNIEnv.ToJniHandle(_renderSurface);
+                IntPtr surface = global::Android.Runtime.JNIEnv.ToJniHandle(holder.Surface);
                 IntPtr ctx = global::Android.Runtime.JNIEnv.ToJniHandle(this);
-
-                // Hand SDL the JavaVM + Context so it can build the AAssetManager.
+                // Hand SDL a JNIEnv* + the Activity Context so it can build the
+                // AAssetManager (used to read game files from the APK).
                 SDL_AndroidSetJavaVM(env, ctx);
                 // SDL (patched) converts the Surface to an ANativeWindow.
                 SDL_AndroidSetNativeWindowFromSurface(env, surface);
 
-                // Make SDL's Android driver ready and give it the surface +
-                // a sensible screen resolution before FNA inits video.
+                // Make SDL's Android driver ready and give it the surface + a
+                // sensible screen resolution before FNA inits video.
                 SDL_AndroidInitNative();
                 var metrics = Resources.DisplayMetrics;
                 int w = metrics.WidthPixels;
@@ -183,12 +194,12 @@ namespace DuckGame.Android
             }
         }
 
-        public void OnSurfaceTextureSizeChanged(global::Android.Graphics.SurfaceTexture surfaceTexture, int width, int height)
+        public void SurfaceChanged(ISurfaceHolder holder, global::Android.Graphics.Format format, int width, int height)
         {
             try
             {
                 IntPtr env = global::Android.Runtime.JNIEnv.Handle;
-                IntPtr surface = global::Android.Runtime.JNIEnv.ToJniHandle(_renderSurface);
+                IntPtr surface = global::Android.Runtime.JNIEnv.ToJniHandle(holder.Surface);
                 SDL_AndroidSetNativeWindowFromSurface(env, surface);
                 SDL_AndroidSetScreenResolution(width, height, width, height,
                     Resources.DisplayMetrics.Density, 60.0f);
@@ -199,19 +210,13 @@ namespace DuckGame.Android
             }
         }
 
-        public bool OnSurfaceTextureDestroyed(global::Android.Graphics.SurfaceTexture surfaceTexture)
+        public void SurfaceDestroyed(ISurfaceHolder holder)
         {
             try
             {
                 SDL_AndroidSetNativeWindow(IntPtr.Zero);
             }
             catch { }
-            return true; // let the SurfaceTexture be released
-        }
-
-        public void OnSurfaceTextureUpdated(global::Android.Graphics.SurfaceTexture surfaceTexture)
-        {
-            // Called after each frame is queued; nothing to do.
         }
 
         public override void OnBackPressed()
