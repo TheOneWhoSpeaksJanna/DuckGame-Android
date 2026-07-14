@@ -26,117 +26,141 @@ namespace Steamworks
     public class NativeMethods { }
     public static class SteamUGC
     {
-        public static dynamic AddDependency(object p0, object p1) { return null; }
-        public static dynamic AddExcludedTag(object p0, object p1) { return null; }
-        public static dynamic AddRequiredTag(object p0, object p1) { return null; }
-        public static dynamic CreateItem(object p0, object p1) { return null; }
-        public static dynamic CreateQueryAllUGCRequest(object p0, object p1, object p2, object p3, object p4) { return null; }
-        public static dynamic CreateQueryUGCDetailsRequest(object p0, object p1) { return null; }
-        public static dynamic CreateQueryUserUGCRequest(object p0, object p1, object p2, object p3, object p4, object p5, object p6) { return null; }
-        public static dynamic DownloadItem(object p0, object p1) { return null; }
-        public static dynamic GetItemDownloadInfo(object p0, out bytesDownloaded, out bytesTotal) { return null; }
-        public static dynamic GetItemInstallInfo(object p0, out SizeOnDisk, out Folder, object p3, out punTimeStamp) { return null; }
-        public static dynamic GetItemState(object p0) { return null; }
-        public static dynamic GetItemUpdateProgress(object p0, out bytesDownloaded, out bytesTotal) { return null; }
+        public static dynamic AddDependency(new PublishedFileId_titemid, new PublishedFileId_tdependsOnid) { return null; }
+        public static dynamic AddExcludedTag(object _handle, object tag) { return null; }
+        public static dynamic AddRequiredTag(object _handle, object tag) { return null; }
+        public static dynamic CreateItem(object SteamUtilsGetAppID, object EWorkshopFileTypek_EWorkshopFileTypeFirst) { return null; }
+        public static dynamic CreateQueryAllUGCRequest(object _queryType, object _fileType, object AppId_t312530, object AppId_t312530, object _page) { return null; }
+        public static dynamic CreateQueryUGCDetailsRequest(SteamHelper.GetArray(files, id => new PublishedFileId_tid, (uint) filesCount) { return null; }
+        public static dynamic CreateQueryUGCDetailsRequest(SteamHelper.GetArray(items, item => new PublishedFileId_titemid, (uint) itemsCount) { return null; }
+        public static dynamic CreateQueryUserUGCRequest(object _accountID, object _listType, object _type, object _sortOrder, object AppId_t312530, object AppId_t312530, object _page) { return null; }
+        public static dynamic DownloadItem(new PublishedFileId_titemid, object true) { return null; }
+        public static dynamic GetItemDownloadInfo(object _id, out object bytesDownloaded, out object bytesTotal) { return null; }
+        public static dynamic GetItemInstallInfo(object _id, out object SizeOnDisk, out object Folder, object p1024, out object punTimeStamp) { return null; }
+        public static dynamic GetItemInstallInfo(object _id, out object SizeOnDisk, out object Folder, object p256, out object punTimeStamp) { return null; }
+        public static dynamic GetItemState(object _id) { return null; }
+        public static dynamic GetItemUpdateProgress(object _currentUpdateHandle, out object bytesDownloaded, out object bytesTotal) { return null; }
         public static dynamic GetNumSubscribedItems() { return null; }
-        public static dynamic GetQueryUGCAdditionalPreview(object p0, object p1, object p2, out url, object p4, out name, object p6, out type) { return null; }
-        public static dynamic GetQueryUGCChildren(object p0, object p1, object p2, object p3) { return null; }
-        public static dynamic GetQueryUGCMetadata(object p0, object p1, object p2, object p3) { return null; }
-        public static dynamic GetQueryUGCNumAdditionalPreviews(object p0, object p1) { return null; }
-        public static dynamic GetQueryUGCPreviewURL(object p0, object p1, object p2, object p3) { return null; }
-        public static dynamic GetQueryUGCResult(object p0, object p1, out ugcDetails) { return null; }
-        public static dynamic GetQueryUGCResult(object p0, object p1, out details) { return null; }
-        public static dynamic GetQueryUGCStatistic(object p0, object p1, object p2, out val) { return null; }
-        public static dynamic GetSubscribedItems(object p0, object p1) { return null; }
-        public static dynamic ReleaseQueryUGCRequest(object p0) { return null; }
-        public static dynamic RemoveDependency(object p0, object p1) { return null; }
-        public static dynamic SendQueryUGCRequest(object p0) { return null; }
-        public static dynamic SetAllowCachedResponse(object p0, object p1) { return null; }
-        public static dynamic SetCloudFileNameFilter(object p0, object p1) { return null; }
-        public static dynamic SetItemContent(object p0, object p1) { return null; }
-        public static dynamic SetItemDescription(object p0, object p1) { return null; }
-        public static dynamic SetItemPreview(object p0, object p1) { return null; }
-        public static dynamic SetItemTags(object p0, object p1) { return null; }
-        public static dynamic SetItemTitle(object p0, object p1) { return null; }
-        public static dynamic SetItemVisibility(object p0, object p1) { return null; }
-        public static dynamic SetMatchAnyTag(object p0, object p1) { return null; }
-        public static dynamic SetRankedByTrendDays(object p0, object p1) { return null; }
-        public static dynamic SetReturnAdditionalPreviews(object p0, object p1) { return null; }
-        public static dynamic SetReturnChildren(object p0, object p1) { return null; }
-        public static dynamic SetReturnLongDescription(object p0, object p1) { return null; }
-        public static dynamic SetReturnMetadata(object p0, object p1) { return null; }
-        public static dynamic SetReturnOnlyIDs(object p0, object p1) { return null; }
-        public static dynamic SetReturnTotalOnly(object p0, object p1) { return null; }
-        public static dynamic SetSearchText(object p0, object p1) { return null; }
-        public static dynamic StartItemUpdate(object p0, object p1) { return null; }
-        public static dynamic SubmitItemUpdate(object p0, object p1) { return null; }
-        public static dynamic SubscribeItem(object p0) { return null; }
-        public static dynamic UnsubscribeItem(object p0) { return null; }
+        public static dynamic GetQueryUGCAdditionalPreview(object queryCompletedm_handle, object resulti, object previewi, out object url, object p260, out object name, object p260, out object type) { return null; }
+        public static dynamic GetQueryUGCChildren(object queryCompletedm_handle, object resulti, object children, object uintchildrenLength) { return null; }
+        public static dynamic GetQueryUGCChildren(object resultm_handle, object i, object dependencies, object uintdependencyCount) { return null; }
+        public static dynamic GetQueryUGCMetadata(object queryCompletedm_handle, object resulti, out object resultmetadata, object p260) { return null; }
+        public static dynamic GetQueryUGCNumAdditionalPreviews(object queryCompletedm_handle, object resulti) { return null; }
+        public static dynamic GetQueryUGCPreviewURL(object queryCompletedm_handle, object resulti, out object resultpreviewURL, object p260) { return null; }
+        public static dynamic GetQueryUGCPreviewURL(object resultm_handle, object i, out object workshopDatapreviewPath, object p256) { return null; }
+        public static dynamic GetQueryUGCResult(object queryCompletedm_handle, object resulti, out object ugcDetails) { return null; }
+        public static dynamic GetQueryUGCResult(object resultm_handle, object i, out object details) { return null; }
+        public static dynamic GetQueryUGCStatistic(object queryCompletedm_handle, object resulti, object EItemStatisticstat, out object val) { return null; }
+        public static dynamic GetSubscribedItems(object tmp, (uint) tmpLength) { return null; }
+        public static dynamic ReleaseQueryUGCRequest(object _handle) { return null; }
+        public static dynamic ReleaseQueryUGCRequest(object resultm_handle) { return null; }
+        public static dynamic RemoveDependency(new PublishedFileId_titemid, new PublishedFileId_tdependsOnid) { return null; }
+        public static dynamic SendQueryUGCRequest(object _handle) { return null; }
+        public static dynamic SendQueryUGCRequest(object query) { return null; }
+        public static dynamic SetAllowCachedResponse(object _handle, object _maxCacheTime) { return null; }
+        public static dynamic SetCloudFileNameFilter(object _handle, object cloudNameFileFilter) { return null; }
+        public static dynamic SetItemContent(object handle, object datacontentFolder) { return null; }
+        public static dynamic SetItemDescription(object handle, object datadescription) { return null; }
+        public static dynamic SetItemPreview(object handle, object datapreviewPath) { return null; }
+        public static dynamic SetItemTags(object handle, object datatags) { return null; }
+        public static dynamic SetItemTitle(object handle, object dataname) { return null; }
+        public static dynamic SetItemVisibility(object handle, (ERemoteStoragePublishedFileVisibility) datavisibility) { return null; }
+        public static dynamic SetMatchAnyTag(object _handle, object matchAnyTag) { return null; }
+        public static dynamic SetRankedByTrendDays(object _handle, object trendRankDays) { return null; }
+        public static dynamic SetReturnAdditionalPreviews(object _handle, (dataToFetch & WorkshopQueryData.AdditionalPreviews) != p0) { return null; }
+        public static dynamic SetReturnAdditionalPreviews(object _handle, object false) { return null; }
+        public static dynamic SetReturnAdditionalPreviews(object _handle, object true) { return null; }
+        public static dynamic SetReturnChildren(object _handle, (dataToFetch & WorkshopQueryData.Children) != p0) { return null; }
+        public static dynamic SetReturnChildren(object _handle, object false) { return null; }
+        public static dynamic SetReturnChildren(object _handle, object true) { return null; }
+        public static dynamic SetReturnLongDescription(object _handle, (dataToFetch & WorkshopQueryData.LongDescription) != p0) { return null; }
+        public static dynamic SetReturnLongDescription(object _handle, object false) { return null; }
+        public static dynamic SetReturnLongDescription(object _handle, object true) { return null; }
+        public static dynamic SetReturnMetadata(object _handle, (dataToFetch & WorkshopQueryData.Metadata) != p0) { return null; }
+        public static dynamic SetReturnMetadata(object _handle, object false) { return null; }
+        public static dynamic SetReturnMetadata(object _handle, object true) { return null; }
+        public static dynamic SetReturnOnlyIDs(object _handle, object true) { return null; }
+        public static dynamic SetReturnTotalOnly(object _handle, object true) { return null; }
+        public static dynamic SetSearchText(object _handle, object searchText) { return null; }
+        public static dynamic StartItemUpdate(object SteamUtilsGetAppID, object _id) { return null; }
+        public static dynamic SubmitItemUpdate(new UGCUpdateHandle_titemupdateHandle, object itemdatachangeNotes) { return null; }
+        public static dynamic SubscribeItem(object _id) { return null; }
+        public static dynamic SubscribeItem(new PublishedFileId_tid) { return null; }
+        public static dynamic UnsubscribeItem(new PublishedFileId_tid) { return null; }
     }
     public static class SteamMatchmaking
     {
-        public static dynamic AddRequestLobbyListCompatibleMembersFilter(object p0) { return null; }
-        public static dynamic AddRequestLobbyListDistanceFilter(object p0) { return null; }
-        public static dynamic AddRequestLobbyListFilterSlotsAvailable(object p0) { return null; }
-        public static dynamic AddRequestLobbyListNearValueFilter(object p0, object p1) { return null; }
-        public static dynamic AddRequestLobbyListNumericalFilter(object p0, object p1, (ELobbyComparison) compareType) { return null; }
-        public static dynamic AddRequestLobbyListResultCountFilter(object p0) { return null; }
-        public static dynamic AddRequestLobbyListStringFilter(object p0, object p1, (ELobbyComparison) compareType) { return null; }
-        public static dynamic CreateLobby((ELobbyType) lobbyType, object p1) { return null; }
+        public static dynamic AddRequestLobbyListCompatibleMembersFilter(new CSteamIDwhoid) { return null; }
+        public static dynamic AddRequestLobbyListDistanceFilter(object ELobbyDistanceFilterk_ELobbyDistanceFilterFar) { return null; }
+        public static dynamic AddRequestLobbyListDistanceFilter(object ELobbyDistanceFilterk_ELobbyDistanceFilterWorldwide) { return null; }
+        public static dynamic AddRequestLobbyListFilterSlotsAvailable(object slots) { return null; }
+        public static dynamic AddRequestLobbyListNearValueFilter(object key, object filt) { return null; }
+        public static dynamic AddRequestLobbyListNumericalFilter(object key, object value, (ELobbyComparison) compareType) { return null; }
+        public static dynamic AddRequestLobbyListResultCountFilter(object max) { return null; }
+        public static dynamic AddRequestLobbyListStringFilter(object key, object value, (ELobbyComparison) compareType) { return null; }
+        public static dynamic CreateLobby((ELobbyType) lobbyType, object maxMembers) { return null; }
         public static dynamic GetLobbyByIndex(object p0) { return null; }
-        public static dynamic GetLobbyChatEntry(object p0, object p1, out CSteamID PlayerID, object p3, object p4, out EChatEntryType peChatEntryType) { return null; }
-        public static dynamic GetLobbyData(object p0, object p1) { return null; }
-        public static dynamic GetLobbyMemberByIndex(object p0, object p1) { return null; }
-        public static dynamic GetLobbyMemberLimit(object p0) { return null; }
-        public static dynamic GetLobbyOwner(object p0) { return null; }
-        public static dynamic GetNumLobbyMembers(object p0) { return null; }
-        public static dynamic InviteUserToLobby(object p0, object p1) { return null; }
-        public static dynamic JoinLobby(object p0) { return null; }
-        public static dynamic LeaveLobby(object p0) { return null; }
+        public static dynamic GetLobbyByIndex(object index) { return null; }
+        public static dynamic GetLobbyChatEntry(new CSteamIDpResultm_ulSteamIDLobby, object CHatID, out CSteamID PlayerID, object PvChat, object CubeData, out EChatEntryType peChatEntryType) { return null; }
+        public static dynamic GetLobbyData(object _id, object name) { return null; }
+        public static dynamic GetLobbyMemberByIndex(object _id, object i) { return null; }
+        public static dynamic GetLobbyMemberByIndex(new CSteamIDwhichid, object member) { return null; }
+        public static dynamic GetLobbyMemberLimit(object _id) { return null; }
+        public static dynamic GetLobbyOwner(object _id) { return null; }
+        public static dynamic GetNumLobbyMembers(object _id) { return null; }
+        public static dynamic GetNumLobbyMembers(new CSteamIDwhichid) { return null; }
+        public static dynamic InviteUserToLobby(new CSteamIDlobbyValid, new CSteamIDuserValid) { return null; }
+        public static dynamic JoinLobby(new CSteamIDlobbyID) { return null; }
+        public static dynamic LeaveLobby(new CSteamIDwhichid) { return null; }
         public static dynamic RequestLobbyList() { return null; }
-        public static dynamic SendLobbyChatMsg(object p0, object p1, object p2) { return null; }
-        public static dynamic SetLobbyData(object p0, object p1, object p2) { return null; }
-        public static dynamic SetLobbyJoinable(object p0, object p1) { return null; }
-        public static dynamic SetLobbyMemberLimit(object p0, _maxMembers = value) { return null; }
-        public static dynamic SetLobbyOwner(object p0, object p1) { return null; }
-        public static dynamic SetLobbyType(object p0, (ELobbyType) value) { return null; }
+        public static dynamic SendLobbyChatMsg(new CSteamIDpLobbyid, object pData, object intpSize) { return null; }
+        public static dynamic SetLobbyData(object _id, object mods, object value) { return null; }
+        public static dynamic SetLobbyData(object _id, object name, object value) { return null; }
+        public static dynamic SetLobbyJoinable(object _id, object value) { return null; }
+        public static dynamic SetLobbyMemberLimit(object _id, _maxMembers = value) { return null; }
+        public static dynamic SetLobbyOwner(object CSteamIDthisid, object CSteamIDvalueid) { return null; }
+        public static dynamic SetLobbyType(object _id, (ELobbyType) value) { return null; }
     }
     public static class SteamFriends
     {
-        public static dynamic ActivateGameOverlayInviteDialog(object p0) { return null; }
+        public static dynamic ActivateGameOverlayInviteDialog(/*requires current lobby) { return null; }
+        public static dynamic ActivateGameOverlayInviteDialog(new CSteamIDlobbyid) { return null; }
         public static dynamic ActivateGameOverlayToWebPage("steam://url/CommunityFilePage/" + id) { return null; }
-        public static dynamic ActivateGameOverlayToWebPage(object p0) { return null; }
-        public static dynamic GetFriendByIndex(object p0, object p1) { return null; }
-        public static dynamic GetFriendCount(object p0) { return null; }
-        public static dynamic GetFriendGamePlayed(object p0, out game) { return null; }
-        public static dynamic GetFriendPersonaName(object p0) { return null; }
-        public static dynamic GetFriendPersonaState(object p0) { return null; }
-        public static dynamic GetFriendRelationship(object p0) { return null; }
-        public static dynamic GetMediumFriendAvatar(object p0) { return null; }
+        public static dynamic ActivateGameOverlayToWebPage(object url) { return null; }
+        public static dynamic GetFriendByIndex(object i, object EFriendFlagsk_EFriendFlagAll) { return null; }
+        public static dynamic GetFriendCount(object EFriendFlagsk_EFriendFlagAll) { return null; }
+        public static dynamic GetFriendGamePlayed(object _id, out object game) { return null; }
+        public static dynamic GetFriendPersonaName(object _id) { return null; }
+        public static dynamic GetFriendPersonaState(object _id) { return null; }
+        public static dynamic GetFriendRelationship(object _id) { return null; }
+        public static dynamic GetMediumFriendAvatar(object _id) { return null; }
         public static dynamic GetPersonaName() { return null; }
-        public static dynamic GetSmallFriendAvatar(object p0) { return null; }
+        public static dynamic GetSmallFriendAvatar(object _id) { return null; }
     }
     public static class SteamRemoteStorage
     {
-        public static dynamic FileDelete(object p0) { return null; }
-        public static dynamic FileExists(object p0) { return null; }
-        public static dynamic FileRead(object p0, object p1, object p2) { return null; }
-        public static dynamic FileWrite(object p0, object p1, object p2) { return null; }
+        public static dynamic FileDelete(object name) { return null; }
+        public static dynamic FileExists(object name) { return null; }
+        public static dynamic FileRead(object managedname, object data, object size) { return null; }
+        public static dynamic FileRead(object name, object data, object size) { return null; }
+        public static dynamic FileWrite(object managedname, object data, object dataLength) { return null; }
+        public static dynamic FileWrite(object name, object data, object length) { return null; }
         public static dynamic GetFileCount() { return null; }
-        public static dynamic GetFileNameAndSize(object p0, out size) { return null; }
-        public static dynamic GetFileSize(object p0) { return null; }
-        public static dynamic GetFileTimestamp(object p0) { return null; }
+        public static dynamic GetFileNameAndSize(object file, out object size) { return null; }
+        public static dynamic GetFileSize(object managedname) { return null; }
+        public static dynamic GetFileSize(object name) { return null; }
+        public static dynamic GetFileTimestamp(object name) { return null; }
         public static dynamic IsCloudEnabledForAccount() { return null; }
         public static dynamic IsCloudEnabledForApp() { return null; }
     }
     public static class SteamUtils
     {
         public static dynamic GetAppID() { return null; }
-        public static dynamic GetEnteredGamepadTextInput(out szTextInput, object p1) { return null; }
+        public static dynamic GetEnteredGamepadTextInput(out object szTextInput, object length) { return null; }
         public static dynamic GetEnteredGamepadTextLength() { return null; }
-        public static dynamic GetImageRGBA(object p0, object p1, object p2) { return null; }
-        public static dynamic GetImageSize(object p0, out w, out h) { return null; }
-        public static dynamic ShowGamepadTextInput(object p0, object p1, object p2, object p3, object p4) { return null; }
+        public static dynamic GetImageRGBA(object id, object data, object dataLength) { return null; }
+        public static dynamic GetImageSize(object id, out object w, out object h) { return null; }
+        public static dynamic ShowGamepadTextInput(object EGamepadTextInputModek_EGamepadTextInputModeNormal, object egamepadTextInputLineMode, object description, object uintmaxChars, object existingText) { return null; }
     }
     public static class SteamUser
     {
@@ -144,14 +168,14 @@ namespace Steamworks
     }
     public static class SteamApps
     {
-        public static dynamic BIsSubscribedApp(object p0) { return null; }
+        public static dynamic BIsSubscribedApp(object SteamUtilsGetAppID) { return null; }
         public static dynamic GetAppBuildId() { return null; }
-        public static dynamic MarkContentCorrupt(object p0) { return null; }
+        public static dynamic MarkContentCorrupt(object false) { return null; }
     }
     public static class SteamAPI
     {
         public static dynamic Init() { return null; }
-        public static dynamic RestartAppIfNecessary(object p0) { return null; }
+        public static dynamic RestartAppIfNecessary(object SteamUtilsGetAppID) { return null; }
         public static dynamic RunCallbacks() { return null; }
         public static dynamic Shutdown() { return null; }
     }
