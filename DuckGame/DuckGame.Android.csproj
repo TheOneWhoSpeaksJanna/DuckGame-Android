@@ -38,6 +38,10 @@
     <Compile Remove="src/MonoTime/Console/Commands/DansTestArea.cs" />
     <Compile Remove="src/DuckGame/Levels/XMLLevel.cs" />
     <Compile Remove="src/MonoTime/Console/NetworkConsole.resx" />
+    <!-- Duplicate of src/XnaToFna/ConnectionIndicator.cs (identical) -->
+    <Compile Remove="src/XnaToFna/ModCompatibility/ConnectionIndicator.cs" />
+    <!-- Root AssemblyInfo duplicates the SDK-generated one and uses removed SecurityPermission -->
+    <Compile Remove="AssemblyInfo.cs" />
   </ItemGroup>
 
   <!-- FNA engine (managed; native libs loaded at runtime) -->
