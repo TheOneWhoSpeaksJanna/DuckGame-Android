@@ -33,8 +33,6 @@
     <Compile Remove="src/XnaToFna/ModCompatibility/ConnectionIndicator.cs" />
     <!-- Root AssemblyInfo duplicates the SDK-generated one and uses removed SecurityPermission -->
     <Compile Remove="AssemblyInfo.cs" />
-    <!-- Peripheral Discord glue (AddedContent) that cannot run on Android without Discord client -->
-    <Compile Remove="AddedContent/klof44/DiscordRichPresence.cs" />
     <!-- Harmony (0Harmony) mod-loading glue referencing Windows-only hooks -->
     <Compile Remove="src/XnaToFna/ModCompatibility/ExtraStuff2Replacements.cs" />
     <Compile Remove="Properties/Settings.Designer.cs" />
