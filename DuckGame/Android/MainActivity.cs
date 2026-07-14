@@ -24,17 +24,32 @@ namespace DuckGame.Android
         [DllImport("libSDL3.so")]
         private static extern void SDL_SetJavaVM(IntPtr vm);
 
-        [DllImport("libart.so")]
-        private static extern int JNI_GetCreatedJavaVMs(out IntPtr vm, int bufLen, out int nVMs);
+        [DllImport("libdl.so")]
+        private static extern IntPtr dlopen(string filename, int flags);
+
+        [DllImport("libdl.so")]
+        private static extern IntPtr dlsym(IntPtr handle, string symbol);
+
+        // bionic RTLD_DEFAULT (searches the global symbol scope).
+        private static readonly IntPtr RTLD_DEFAULT = (IntPtr)(-2);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int GetCreatedJavaVMs(out IntPtr vm, int bufLen, out int nVMs);
 
         public static void Init()
         {
             try
             {
-                // ART always exports JNI_GetCreatedJavaVMs; grab the already
-                // created JavaVM* and hand it to SDL's Android driver.
-                if (JNI_GetCreatedJavaVMs(out IntPtr javaVM, 1, out int nVMs) == 0 && nVMs > 0 && javaVM != IntPtr.Zero)
-                    SDL_SetJavaVM(javaVM);
+                // ART's JNI_GetCreatedJavaVMs is in libart.so (or libnativehelper),
+                // but neither soname resolves via DllImport from the app. Resolve
+                // it from the global symbol scope via dlopen/dlsym instead.
+                IntPtr sym = dlsym(RTLD_DEFAULT, "JNI_GetCreatedJavaVMs");
+                if (sym != IntPtr.Zero)
+                {
+                    var getVMs = (GetCreatedJavaVMs)Marshal.GetDelegateForFunctionPointer(sym, typeof(GetCreatedJavaVMs));
+                    if (getVMs(out IntPtr javaVM, 1, out int nVMs) == 0 && nVMs > 0 && javaVM != IntPtr.Zero)
+                        SDL_SetJavaVM(javaVM);
+                }
             }
             catch (Exception ex)
             {
