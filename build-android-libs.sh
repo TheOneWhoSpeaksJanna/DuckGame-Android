@@ -84,7 +84,12 @@ fi
 # ---- FAudio ----
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- FNA3D (includes MojoShader) ----
-build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
+# Force ONLY the OpenGL FNA3D driver (no SDL3 GPU driver). The SDL3 GPU
+# driver presents a swapchain texture and never calls SDL_GL_SwapWindow,
+# which is where our readback-blit capture hook lives. The OpenGL driver
+# calls SDL_GL_SwapWindow -> Android_GLES_SwapWindow, so capture works.
+# OpenGL also runs fine on real devices.
+build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DBUILD_SDL3=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- Theorafile (Makefile-based; bundle ogg/theora/vorbis) ----
 echo "=== building theorafile (Makefile) ==="
 TF="$FNA/Theorafile"
