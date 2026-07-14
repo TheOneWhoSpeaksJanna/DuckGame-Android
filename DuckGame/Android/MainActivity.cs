@@ -66,6 +66,10 @@ namespace DuckGame.Android
         [DllImport("libSDL3.so")]
         private static extern void SDL_AndroidSetJavaVM(IntPtr env, IntPtr context);
 
+        // DIAGNOSTIC: enable verbose SDL logging to a logcat-readable stream.
+        [DllImport("libSDL3.so")]
+        private static extern void SDL_LogSetAllPriority(int priority);
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -132,6 +136,8 @@ namespace DuckGame.Android
             _surfaceReady.WaitOne();
             try
             {
+                // DIAGNOSTIC: verbose SDL logging.
+                SDL_LogSetAllPriority(4); // SDL_LOG_PRIORITY_VERBOSE
                 global::DuckGame.Program.Main(new string[0]);
             }
             catch (Exception ex)
