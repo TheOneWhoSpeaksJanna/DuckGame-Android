@@ -374,4 +374,28 @@ patch_file(
 """
 )
 
+# ---------------------------------------------------------------------------
+# 9. Android_JNI_SendMessage dereferences mJavaVM/mActivityClass. Under .NET
+#    Android, JNI_OnLoad never runs (no Java SDLActivity), so mJavaVM is NULL.
+#    Guard it to no-op when there is no JavaVM (we drive everything natively).
+# ---------------------------------------------------------------------------
+patch_file(
+    ANDROID_C,
+    """bool Android_JNI_SendMessage(int command, int param)
+{
+    JNIEnv *env = Android_JNI_GetEnv();
+    return (*env)->CallStaticBooleanMethod(env, mActivityClass, midSendMessage, command, param);
+}""",
+    """bool Android_JNI_SendMessage(int command, int param)
+{
+    /* DuckGame-Android: with no Java SDLActivity (JNI_OnLoad never runs
+       under .NET's dlopen), mJavaVM is NULL. No-op instead of crashing. */
+    if (!mJavaVM) {
+        return false;
+    }
+    JNIEnv *env = Android_JNI_GetEnv();
+    return (*env)->CallStaticBooleanMethod(env, mActivityClass, midSendMessage, command, param);
+}""",
+)
+
 print("All SDL3 Android patches applied.")
