@@ -119,11 +119,11 @@ namespace DuckGame.Android
                 ViewGroup.LayoutParams.MatchParent,
                 WindowManagerTypes.ApplicationOverlay,
                 WindowManagerFlags.NotFocusable | WindowManagerFlags.LayoutInScreen,
-                Format.Translucent)
+                global::Android.Graphics.Format.Translucent)
             {
                 Gravity = GravityFlags.Fill
             };
-            var wm = (WindowManager)GetSystemService(WindowService).JavaCast<WindowManager>();
+            var wm = (IWindowManager)GetSystemService(WindowService).JavaCast<WindowManager>();
             wm.AddView(_gamepad, lp);
 
             // Run the real game loop on a background thread; the main (UI) thread
