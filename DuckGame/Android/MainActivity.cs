@@ -5,6 +5,7 @@ using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using Android.Runtime;
 using Android.Util;
 using Android.Views;
 using SDL3;
@@ -97,27 +98,33 @@ namespace DuckGame.Android
                 Window.Attributes.LayoutInDisplayCutoutMode = global::Android.Views.LayoutInDisplayCutoutMode.ShortEdges;
             }
 
-            // SurfaceView: Android's UI toolkit that owns an ANativeWindow we can
-            // hand to SDL. Make it the top-most surface so the FNA/SDL EGL
-            // surface composites in front of the window background (otherwise the
-            // opaque/transparent window draws over it and we see black). The touch
-            // gamepad is then layered on top of the SurfaceView.
+            // SurfaceView owns the ANativeWindow we hand to SDL. Put it ON TOP of
+            // the window so FNA/SDL's EGL surface composites in front of the
+            // (otherwise black/transparent) window background. The on-screen
+            // touch gamepad is added as a separate WindowManager overlay that
+            // sits above even the SurfaceView (see below).
             _surfaceView = new SurfaceView(this);
-            // Place this SurfaceView's surface ABOVE the window background but
-            // BELOW the normal app views (the touch overlay), so FNA/SDL's EGL
-            // render shows through instead of the window's black/transparent
-            // fill, while the on-screen buttons stay visible on top.
-            _surfaceView.SetZOrderMediaOverlay(true);
+            _surfaceView.SetZOrderOnTop(true);
             _surfaceView.Holder.SetFormat(global::Android.Graphics.Format.Opaque);
             AddContentView(_surfaceView, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
             _surfaceView.Holder.AddCallback(this);
 
-            // On-screen touch gamepad overlay (injects real SDL keys; game is unmodified)
+            // On-screen touch gamepad, layered ABOVE the SurfaceView via its own
+            // window so buttons stay visible while FNA renders underneath.
             _gamepad = new TouchGamepadView(this);
             _gamepad.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
-            AddContentView(_gamepad, new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            var lp = new WindowManagerLayoutParams(
+                ViewGroup.LayoutParams.MatchParent,
+                ViewGroup.LayoutParams.MatchParent,
+                WindowManagerTypes.ApplicationOverlay,
+                WindowManagerFlags.NotFocusable | WindowManagerFlags.LayoutInScreen,
+                Format.Translucent)
+            {
+                Gravity = GravityFlags.Fill
+            };
+            var wm = (WindowManager)GetSystemService(WindowService).JavaCast<WindowManager>();
+            wm.AddView(_gamepad, lp);
 
             // Run the real game loop on a background thread; the main (UI) thread
             // stays free so the surface callback can fire and hand SDL the window.
