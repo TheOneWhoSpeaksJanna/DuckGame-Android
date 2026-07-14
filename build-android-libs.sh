@@ -51,7 +51,7 @@ build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_LI
 echo "=== building theorafile (Makefile) ==="
 TF="$FNA/Theorafile"
 NDK_CLANG="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
-( cd "$TF" && make clean && CC="$NDK_CLANG --target=aarch64-none-linux-android$API --sysroot=$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot -fPIC -O3" \
+( cd "$TF" && make clean && make CC="$NDK_CLANG --target=aarch64-none-linux-android$API --sysroot=$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot -fPIC -O3" \
     CFLAGS="-fPIC -O3" LDFLAGS="-shared" lib )
 cp -f "$TF/libtheorafile.so" "$OUT/"
 
