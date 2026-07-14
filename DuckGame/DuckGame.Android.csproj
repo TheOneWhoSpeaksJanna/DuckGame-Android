@@ -71,6 +71,10 @@
     <Reference Include="NVorbis.NAudioSupport"><HintPath>lib\NVorbis.NAudioSupport.dll</HintPath></Reference>
     <Reference Include="0Harmony"><HintPath>lib\0Harmony.dll</HintPath></Reference>
     <Reference Include="DiscordRPC"><HintPath>lib\DiscordRPC.dll</HintPath></Reference>
+    <!-- Real Steamworks.NET implementation DLL, bundled so DGSteam.dll can
+         resolve its (managed) types at runtime. No native steam_api is loaded
+         because SteamAPI.Init() is a no-op on Android. -->
+    <Reference Include="Steamworks.NET"><HintPath>Steam\lib\Steamworks.NET.dll</HintPath></Reference>
   </ItemGroup>
 
   <!-- NuGet dependencies (multi-target netstandard2.0/net8) -->
@@ -86,14 +90,9 @@
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
     <PackageReference Include="System.CodeDom" Version="8.0.0" />
-    <!-- Steamworks.NET must be deployed into the APK so DGSteam.dll can resolve
-         its (managed) types at runtime. No native steam_api is loaded because
-         SteamAPI.Init() is a no-op on Android. -->
-    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
-    <!-- The game's Steam wrapper (DGSteam, Steam.Android.csproj) now
-         compiles against the real Steamworks.NET NuGet. SteamAPI.Init() is
-         guarded to a no-op on Android (__ANDROID__), so no native
-         steam_api is loaded. Steam is non-functional on Android regardless. -->
+    <!-- Steamworks.NET is bundled via a file <Reference> (Steam\lib\Steamworks.NET.dll)
+         so DGSteam.dll resolves its managed types at runtime. SteamAPI.Init()
+         is a no-op on Android, so no native steam_api is loaded. -->
     <!-- Roslyn 4.8.0 — ModLoader compiles mods at runtime (ModLoader.cs uses
          CSharpCompilation etc.). The using-namespace consumer (XMLLevel) is also
          covered. These packages are required for the build; the linker is set to

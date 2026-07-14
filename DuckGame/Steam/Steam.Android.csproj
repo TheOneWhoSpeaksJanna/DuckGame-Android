@@ -17,10 +17,10 @@
   <ItemGroup>
     <Compile Include="src/**/*.cs" />
     <Compile Include="Properties/AssemblyInfo.cs" />
-    <!-- Real Steamworks.NET (managed wrapper, exact API types DGSteam expects).
-         The native steam_api is only P/Invoked by SteamAPI.Init(), which we
-         guard to a no-op on Android (see Steam.InitializeCore), so no native
-         steam lib is required/loaded on the device. -->
-    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
+    <!-- Real Steamworks.NET implementation DLL (not the NuGet reference assembly,
+         which .NET Android prunes from the APK). Referenced by HintPath so it
+         compiles DGSteam and is bundled at runtime. SteamAPI.Init() is a no-op
+         on Android, so no native steam_api is ever loaded. -->
+    <Reference Include="Steamworks.NET"><HintPath>lib\Steamworks.NET.dll</HintPath></Reference>
   </ItemGroup>
 </Project>
