@@ -1,0 +1,106 @@
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Mono.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace src.XnaToFna
+{
+    public class TranspilerMapEntry
+    {
+        public MethodInfo methodInfo;
+        public ParameterInfo[] parameters;
+        public TranspilerMapEntry(MethodInfo _methodInfo)
+        {
+            if (_methodInfo == null) 
+                throw new ArgumentNullException(nameof(_methodInfo));
+            if (!_methodInfo.IsStatic)
+                throw new ArgumentException("the method must be static");
+            parameters = _methodInfo.GetParameters();
+            if (parameters.Length > 2)
+            {
+                throw new ArgumentException("the method cant have more than one parameters");
+            }
+            if (parameters.Length == 1 && parameters[0].ParameterType != typeof(List<Instruction>) && parameters[0].ParameterType != typeof(MethodDefinition))
+            {
+                throw new ArgumentException("the method parameter must be List<Instruction> or MethodDefinition");
+            }
+            if (parameters.Length == 2 &&
+                !((parameters[0].ParameterType == typeof(List<Instruction>) && parameters[1].ParameterType == typeof(MethodDefinition)) ||
+                  (parameters[0].ParameterType == typeof(MethodDefinition) && parameters[1].ParameterType == typeof(List<Instruction>))))
+            {
+                throw new ArgumentException("the method parameters must be List<Instruction> and MethodDefinition (in either order)");
+            }
+            methodInfo = _methodInfo;
+
+        }
+
+        public InstructionCollection ProcessILCode(List<Instruction> instructions, MethodDefinition method)
+        {
+            object return_val = null;
+            if (parameters.Length == 1)
+            {
+                if (parameters[0].ParameterType == typeof(MethodDefinition))
+                {
+                    return_val = methodInfo.Invoke(null, new object[] { method });
+                    if (return_val == null)
+                    {
+                        return null;
+                    }
+                    instructions = (List<Instruction>)return_val;
+                }
+                else
+                {
+                    return_val = methodInfo.Invoke(null, new object[] { instructions });
+                    if (return_val == null)
+                    {
+                        return null;
+                    }
+                    instructions = (List<Instruction>)return_val;
+                }
+            }
+            else if (parameters.Length == 2)
+            {
+                if (parameters[0].ParameterType == typeof(MethodDefinition) && parameters[1].ParameterType == typeof(List<Instruction>))
+                {
+                    return_val = methodInfo.Invoke(null, new object[] { method, instructions });
+                    if (return_val == null)
+                    {
+                        return null;
+                    }
+                    instructions = (List<Instruction>)return_val;
+                }
+                else if (parameters[0].ParameterType == typeof(List<Instruction>) && parameters[1].ParameterType == typeof(MethodDefinition))
+                {
+                    return_val = methodInfo.Invoke(null, new object[] { instructions, method });
+                    if (return_val == null)
+                    {
+                        return null;
+                    }
+                    instructions = (List<Instruction>)return_val;
+                }
+            }
+            else
+            {
+                return_val = methodInfo.Invoke(null, null);
+                if (return_val == null)
+                {
+                    return null;
+                }
+                instructions = (List<Instruction>)return_val;
+            }
+                
+            InstructionCollection returninstructions = new InstructionCollection(method);
+            foreach(Instruction instruction in instructions)
+            {
+                returninstructions.Add(instruction);
+            }
+            return returninstructions;
+        }
+    }
+}

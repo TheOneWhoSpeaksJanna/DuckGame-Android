@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>DuckGame</AssemblyName>
+    <RootNamespace>DuckGame</RootNamespace>
+    <!-- Android packaging -->
+    <AndroidPackageFormats>apk</AndroidPackageFormats>
+    <AndroidSupportedAbis>arm64-v8a</AndroidSupportedAbis>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <RunAotCompilation>false</RunAotCompilation>
+    <AndroidUseAapt2>true</AndroidUseAapt2>
+    <AndroidManifest>Android/AndroidManifest.xml</AndroidManifest>
+    <ApplicationId>com.duckgame.game</ApplicationId>
+    <ApplicationTitle>Duck Game</ApplicationTitle>
+    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <TargetAndroidApiLevel>34</TargetAndroidApiLevel>
+    <EnableDefaultItems>true</EnableDefaultItems>
+    <ManagePackageReferencesCentrally>false</ManagePackageReferencesCentrally>
+    <!-- FNA is a plain class library; no extra defines needed -->
+    <DefineConstants>$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Compile the real game source verbatim; exclude only Windows-only files -->
+  <ItemGroup>
+    <!-- Windows-only / desktop-only files that cannot compile for Android -->
+    <Compile Remove="src/WindowsPlatformStartup.cs" />
+    <Compile Remove="src/MonoTime/Modding/ModLoader/ModLoader.cs" />
+    <Compile Remove="src/MonoTime/File/RtfWriter.cs" />
+    <Compile Remove="src/XnaToFna/GameFormForWinForms.cs" />
+    <Compile Remove="src/XnaToFna/XnaToFnaUtil.cs" />
+    <Compile Remove="src/DuckGame/Network/NMKillDuck.cs" />
+    <Compile Remove="src/OnOutputDebugStringHandler.cs" />
+    <Compile Remove="src/DebugMonitor.cs" />
+    <Compile Remove="src/DiscordRichPresence.cs" />
+    <Compile Remove="src/MonoTime/Console/Commands/DansTestArea.cs" />
+    <Compile Remove="src/DuckGame/Levels/XMLLevel.cs" />
+    <!-- Windows platform-specific renderer shims (System.Drawing) kept out; FNA provides drawing -->
+    <Compile Remove="src/SystemDrawing/DGSizeF.cs" />
+    <Compile Remove="src/SystemDrawing/DGPoint.cs" />
+    <Compile Remove="src/SystemDrawing/DGSize.cs" />
+    <Compile Remove="src/SystemDrawing/DGPointF.cs" />
+  </ItemGroup>
+
+  <!-- FNA engine (managed; native libs loaded at runtime) -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\FNA\FNA.Core.csproj" />
+  </ItemGroup>
+
+  <!-- NuGet dependencies the game actually uses (all multi-target netstandard2.0/net8) -->
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0" />
+    <PackageReference Include="NVorbis" Version="0.10.5" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.5" />
+  </ItemGroup>
+
+  <!-- Bundle game content + assets into the APK -->
+  <ItemGroup>
+    <AndroidAsset Include="Content\**\*" Link="Content\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="spriteatlas.png" Link="spriteatlas.png" />
+    <AndroidAsset Include="spriteatlas_offsets.txt" Link="spriteatlas_offsets.txt" />
+    <AndroidAsset Include="AddedContent\**\*" Link="AddedContent\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Native FNA libs (SDL2/FNA3D/FAudio/theorafile/mojoshader) are deployed by CI into libs/arm64-v8a -->
+  <ItemGroup>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\*.so" />
+  </ItemGroup>
+</Project>
