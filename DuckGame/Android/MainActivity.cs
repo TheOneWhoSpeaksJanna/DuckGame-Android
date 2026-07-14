@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -14,47 +13,18 @@ using Android.Views;
 
 namespace DuckGame.Android
 {
-    // SDL3's Android video driver needs the ART JavaVM pointer (normally handed
-    // in by SDL's Java SDLActivity glue, which FNA's desktop SDL_Init path
-    // never does). Without it, SDL_Init(VIDEO) null-derefs inside
-    // Android_JNI_InitTouch. We fetch the already-created ART JavaVM and
-    // pass it to SDL before the game inits video.
+    // FNA's SDL3 video init selects the Android driver, which requires SDL's
+    // Java SDLActivity glue (nativeSetupJNI / nativeSetScreenResolution /
+    // onNativeSurfaceCreated -> SDL_SetAndroidSurface) to have already handed
+    // SDL the ART JavaVM* AND the Android native window (Surface) + screen
+    // resolution. FNA's desktop SDL_Init path never invokes that glue, so
+    // there is no Android backend for FNA. A correct port needs that
+    // surface/window handoff reimplemented (a real platform layer), not a
+    // config toggle. Until then this is intentionally a documented no-op
+    // so the failure mode stays the clean "no JavaVM" diagnosis.
     internal static class SdlAndroidBridge
     {
-        [DllImport("libSDL3.so")]
-        private static extern void SDL_SetJavaVM(IntPtr vm);
-
-        [DllImport("libdl.so")]
-        private static extern IntPtr dlopen(string filename, int flags);
-
-        [DllImport("libdl.so")]
-        private static extern IntPtr dlsym(IntPtr handle, string symbol);
-
-        // bionic RTLD_DEFAULT (searches the global symbol scope).
-        private static readonly IntPtr RTLD_DEFAULT = (IntPtr)(-2);
-
-        public static void Init()
-        {
-            try
-            {
-                // .NET Android stores its JavaVM* in libmonodroid.so's global
-                // "monodroid_java_vm" (a JavaVM**). Resolve it from the global
-                // symbol scope (ART's JNI_GetCreatedJavaVMs is a broken stub
-                // on Android and crashes the linker if called).
-                IntPtr sym = dlsym(RTLD_DEFAULT, "monodroid_java_vm");
-                if (sym != IntPtr.Zero)
-                {
-                    // sym is JavaVM** -> read the JavaVM*.
-                    IntPtr javaVM = Marshal.ReadIntPtr(sym);
-                    if (javaVM != IntPtr.Zero)
-                        SDL_SetJavaVM(javaVM);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error("DuckGame", "SDL Android JVM bridge failed: " + ex);
-            }
-        }
+        public static void Init() { /* see note above */ }
     }
 
     /// <summary>
@@ -102,10 +72,6 @@ namespace DuckGame.Android
             // On-screen touch gamepad overlay (injects real SDL keys; game is unmodified)
             _gamepad = new TouchGamepadView(this);
             AddContentView(_gamepad, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
-
-            // Hand SDL the ART JavaVM before FNA inits video (SDL's Android
-            // driver null-derefs its JavaVM* otherwise).
-            SdlAndroidBridge.Init();
 
             // FNA/SDL must own the main (UI) thread and the Android surface, so run
             // the real game loop directly on this thread (it blocks until exit).

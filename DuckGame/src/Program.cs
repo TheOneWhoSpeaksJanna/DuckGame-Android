@@ -1048,11 +1048,6 @@ namespace DuckGame
                 SendCrashToServer(pException);
             }
             catch { }
-            Console.Error.WriteLine("[DUCKCRASH] EX: " + pException.GetType() + ": " + pException.Message);
-            Console.Error.WriteLine("[DUCKCRASH] STACK: " + (pException.StackTrace ?? "<none>"));
-            Console.Error.WriteLine("[DUCKCRASH] ENVSTACK: " + Environment.StackTrace);
-            if (pException.InnerException != null)
-                Console.Error.WriteLine("[DUCKCRASH] INNER: " + pException.InnerException.GetType() + ": " + pException.InnerException.Message + "\n" + (pException.InnerException.StackTrace ?? "<none>"));
             MonoMain.InvokeOnGameExitEvent(true);
 
             if (pException is ThreadAbortException)
@@ -1249,14 +1244,12 @@ namespace DuckGame
         {
             try
             {
-                Console.Error.WriteLine("[DUCKCRASH] " + s);
                 StreamWriter streamWriter = new StreamWriter("ducklog.txt", true);
                 streamWriter.WriteLine(s + "\n");
                 streamWriter.Close();
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("[DUCKCRASH] " + ex.ToString());
                 StreamWriter streamWriter = new StreamWriter("ducklog.txt", true);
                 streamWriter.WriteLine(ex.ToString() + "\n");
                 streamWriter.Close();
