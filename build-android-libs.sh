@@ -69,10 +69,10 @@ else
 fi
 
 echo "=== verifying FNA3D capture symbol exports ==="
-FNA3D_SO="$(find "$FNA/FNA3D" -name 'libFNA3D.so' 2>/dev/null | head -1)"
+FNA3D_SO="$(find "$OUT" -name 'libFNA3D.so' 2>/dev/null | head -1)"
 echo "libFNA3D.so = $FNA3D_SO"
 if [ -z "$FNA3D_SO" ]; then
-  echo "FAIL: libFNA3D.so not found under $FNA/FNA3D"; exit 1
+  echo "FAIL: libFNA3D.so not found under $OUT"; exit 1
 fi
 "$NM" -D "$FNA3D_SO" 2>/dev/null | grep "DuckGame" || echo "(none in dynamic table)"
 CAPCOUNT=$( "$NM" -D "$FNA3D_SO" 2>/dev/null | grep -c "DuckGame" )
