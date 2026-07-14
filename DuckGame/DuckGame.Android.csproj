@@ -14,11 +14,6 @@
     <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <RunAotCompilation>false</RunAotCompilation>
-    <!-- Pin the BCL reference assembly to 8.0.28 so the app's System.Private.CoreLib
-         matches the Android workload's Mono runtime CoreLib (also 8.0.28). The latest
-         8.0.x SDK ships Ref 8.0.2, which skews from the workload's 8.0.28 and makes
-         Mono abort (TypeLoadException) while loading CoreLib. -->
-    <MicrosoftNetCoreAppRefVersion>8.0.28</MicrosoftNetCoreAppRefVersion>
     <AndroidUseAapt2>true</AndroidUseAapt2>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <ApplicationId>com.duckgame.game</ApplicationId>
@@ -48,6 +43,10 @@
     <Compile Remove="src/XnaToFna/ModCompatibility/ExtraStuff2Replacements.cs" />
     <Compile Remove="Properties/Settings.Designer.cs" />
     <Compile Remove="Properties/Settings.settings" />
+    <!-- WindowsPlatformStartup.cs is Windows-only (P/Invokes LoadLibrary,
+         EnumDisplaySettings, CrashWindow.exe, DGInput.dll). It is replaced on
+         Android by Android/WindowsPlatformStartupShim.cs (no-op stubs). -->
+    <Compile Remove="src/WindowsPlatformStartup.cs" />
   </ItemGroup>
 
   <!-- FNA engine (managed; native libs loaded at runtime) -->
@@ -68,18 +67,11 @@
     <Reference Include="NAudio"><HintPath>lib\NAudio.dll</HintPath></Reference>
     <Reference Include="NVorbis.NAudioSupport"><HintPath>lib\NVorbis.NAudioSupport.dll</HintPath></Reference>
     <Reference Include="0Harmony"><HintPath>lib\0Harmony.dll</HintPath></Reference>
-    <Reference Include="Microsoft.Bcl.HashCode"><HintPath>lib\Microsoft.Bcl.HashCode.dll</HintPath></Reference>
-    <Reference Include="DGInput"><HintPath>lib\DGInput.dll</HintPath></Reference>
     <Reference Include="DiscordRPC"><HintPath>lib\DiscordRPC.dll</HintPath></Reference>
   </ItemGroup>
 
   <!-- NuGet dependencies (multi-target netstandard2.0/net8) -->
   <ItemGroup>
-    <!-- Force the Microsoft.NETCore.App *reference* assembly to 8.0.28 so the bundled
-         System.Private.CoreLib matches the Android workload's Mono runtime CoreLib
-         (also 8.0.28). The SDK ships Ref 8.0.2, which skews and makes Mono abort on
-         CoreLib load (TypeLoadException). -->
-    <PackageReference Include="Microsoft.NETCore.App.Ref" Version="8.0.28" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0" />
