@@ -84,40 +84,19 @@ fi
 # ---- FAudio ----
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- FNA3D (includes MojoShader) ----
-# Keep BUILD_SDL3=ON so FNA3D links against libSDL3.so (MojoShader
-# and the OpenGL driver need SDL3 symbols). We then PATCH the driver
-# table in FNA3D.c to drop the SDL3 GPU driver (SDLGPUDriver) so the
-# OpenGL driver is the only GL backend. The SDL3 GPU driver presents a
-# swapchain texture and never calls SDL_GL_SwapWindow, which is where our
-# readback-blit capture hook lives. With only the OpenGL driver, every
-# present goes through SDL_GL_SwapWindow -> Android_GLES_SwapWindow,
-# so the capture fires. OpenGL also works fine on real devices.
-echo "=== patching FNA3D driver table (drop SDL3 GPU driver) ==="
-python3 - "$FNA/FNA3D/src/FNA3D.c" <<'PY'
-import sys, io
-p = sys.argv[1]
-s = io.open(p, encoding='utf-8').read()
-old = "\t&SDLGPUDriver,\n"
-new = "\t/*DuckGame-Android: OpenGL-only; GPU driver dropped so the EGL readback path is used*/&SDLGPUDriver,\n"
-assert old in s, "FNA3D driver table line not found: "+repr(old)
-s = s.replace(old, new)
-io.open(p, 'w', encoding='utf-8').write(s)
-print("OK: FNA3D GPU driver dropped from drivers[]")
-PY
-echo "=== patching FNA3D OpenGL swap (diagnostic log) ==="
-python3 - "$FNA/FNA3D/src/FNA3D_Driver_OpenGL.c" <<'PY'
-import sys, io
-p = sys.argv[1]
-s = io.open(p, encoding='utf-8').read()
-if '#include <android/log.h>' not in s:
-    s = s.replace('#include <stdio.h>', '#include <stdio.h>\n#include <android/log.h>', 1)
-old = "static void OPENGL_SwapBuffers(\n"
-new = "static void OPENGL_SwapBuffers(\n\t__android_log_print(ANDROID_LOG_INFO, \"DuckGame\", \"OPENGL_SwapBuffers ENTER\");\n"
-assert old in s, "OPENGL_SwapBuffers not found"
-s = s.replace(old, new, 1)
-io.open(p, 'w', encoding='utf-8').write(s)
-print("OK: injected OPENGL_SwapBuffers log")
-PY
+# FNA3D is built with BUILD_SDL3=ON so it links libSDL3.so and
+# the SDL3 GPU driver (the DGR-FNA fork's only working present
+# path) is available. We then PATCH the SDL3 GPU driver so it
+# hands the final rendered frame to managed code (readback-blit),
+# which mirrors it onto a Canvas on redroid (whose software
+# compositor can't present the SDL SurfaceView layer). On real
+# devices g_DuckGameCapture stays 0 and the native SurfaceView
+# path is used unchanged. OpenGL is also available and works.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/patches/patch_fna3d_capture.py" ]; then
+  echo "=== patching FNA3D GPU driver (readback-blit capture) ==="
+  python3 "$SCRIPT_DIR/patches/patch_fna3d_capture.py"
+fi
 build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DBUILD_SDL3=ON -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- Theorafile (Makefile-based; bundle ogg/theora/vorbis) ----
 echo "=== building theorafile (Makefile) ==="

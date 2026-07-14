@@ -87,16 +87,16 @@ namespace DuckGame.Android
         [DllImport("libSDL3.so")]
         private static extern void SDL_AndroidSetJavaVM(IntPtr env, IntPtr context);
 
-        // DuckGame-Android readback-blit bridge (see patch_sdl3_android.py step 12).
-        // On emulators (redroid) whose software compositor can't present the
-        // SurfaceView hardware layer, we capture the EGL backbuffer here and
-        // blit it onto a normal Canvas View (which composites fine). On real
-        // devices these stay disabled and the native SurfaceView is used.
-        [DllImport("libSDL3.so")]
-        private static extern void SDL_DuckGameSetCapture(int enabled);
+        // DuckGame-Android readback-blit bridge (see patch_fna3d_capture.py).
+        // FNA3D's SDL3 GPU driver hands the final rendered frame to
+        // managed code here; on redroid we blit it onto a Canvas View
+        // (the software compositor can't present the SDL SurfaceView layer).
+        // Real devices keep the native SurfaceView path and never enable this.
+        [DllImport("libFNA3D.so")]
+        private static extern void DuckGame_SetCapture(int enabled);
 
-        [DllImport("libSDL3.so")]
-        private static extern int SDL_DuckGameLockPixels(out int w, out int h, out IntPtr pixels);
+        [DllImport("libFNA3D.so")]
+        private static extern int DuckGame_LockPixels(out int w, out int h, out IntPtr pixels);
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -205,16 +205,16 @@ namespace DuckGame.Android
                 // Force SDL's Android video driver (FNA's desktop path might
                 // otherwise pick a non-Android driver on .NET Android).
                 SDL.SDL_SetHint("SDL_VIDEODRIVER", "android");
-                // On redroid we capture the GL backbuffer via a patched
-                // Android_GLES_SwapWindow hook, which only fires on the OpenGL
-                // FNA3D driver (the SDL3 GPU driver presents a swapchain
-                // texture instead). Force the OpenGL driver so the readback
-                // path works. Real devices use the native SurfaceView path and
-                // keep the default (GPU) driver for best performance.
+                // On redroid we capture the final GPU frame via the patched
+                // FNA3D SDL3-GPU driver (DuckGame_SetCapture) and mirror
+                // it onto a Canvas View, because redroid's software
+                // compositor can't present the SDL SurfaceView layer.
+                // Real devices use the native SurfaceView path and never
+                // enable capture.
                 if (_isRedroid)
                 {
-                    SDL.SDL_SetHint("FNA3D_FORCE_DRIVER", "OpenGL");
-                    Log.Info("DuckGame", "set FNA3D_FORCE_DRIVER=OpenGL; readback=" + SDL.SDL_GetHint("FNA3D_FORCE_DRIVER"));
+                    DuckGame_SetCapture(1);
+                    Log.Info("DuckGame", "redroid: readback-blit capture ENABLED");
                 }
 
                 // Start the readback-blit pump (redroid only). It reads the
@@ -248,7 +248,7 @@ namespace DuckGame.Android
                 try
                 {
                     int w, h; IntPtr px;
-                    if (SDL_DuckGameLockPixels(out w, out h, out px) != 0 && w > 0 && h > 0 && px != IntPtr.Zero)
+                    if (DuckGame_LockPixels(out w, out h, out px) != 0 && w > 0 && h > 0 && px != IntPtr.Zero)
                     {
                         _blitView.PushFrame(w, h, px);
                         if ((++frames % 30) == 0) Log.Info("DuckGame", "blit frames=" + frames + " " + w + "x" + h);
