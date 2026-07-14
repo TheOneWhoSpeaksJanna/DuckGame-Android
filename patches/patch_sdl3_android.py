@@ -529,6 +529,7 @@ patch_file(
     if (g_DuckGameCapture) {
         int w = window->w;
         int h = window->h;
+        __android_log_print(ANDROID_LOG_INFO, "DuckGame", "capture swap w=%d h=%d", w, h);
         if (w > 0 && h > 0) {
             int need = w * h * 4;
             if (!g_DuckGamePixels || g_DuckGamePixW != w || g_DuckGamePixH != h) {
@@ -536,9 +537,12 @@ patch_file(
                 g_DuckGamePixels = (unsigned char *)SDL_malloc(need);
                 g_DuckGamePixW = w;
                 g_DuckGamePixH = h;
+                __android_log_print(ANDROID_LOG_INFO, "DuckGame", "capture malloc %d bytes ptr=%p", need, (void*)g_DuckGamePixels);
             }
             if (g_DuckGamePixels) {
                 glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, g_DuckGamePixels);
+                GLenum err = glGetError();
+                __android_log_print(ANDROID_LOG_INFO, "DuckGame", "capture glReadPixels err=0x%x", (unsigned)err);
             }
         }
     }
