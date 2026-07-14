@@ -15,7 +15,7 @@
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <RunAotCompilation>false</RunAotCompilation>
     <AndroidUseAapt2>true</AndroidUseAapt2>
-    <!-- Manifest is auto-generated from the [Activity] attribute; see MainActivity.cs -->
+    <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <ApplicationId>com.duckgame.game</ApplicationId>
     <ApplicationTitle>Duck Game</ApplicationTitle>
     <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
