@@ -14,11 +14,13 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
       - name: Install Android workload
+        # IMPORTANT: use the runner's pre-installed dotnet. Installing a separate
+        # 8.0.x SDK (actions/setup-dotnet) bundles a Microsoft.NETCore.App whose
+        # System.Private.CoreLib (8.0.2) mismatches the Android workload's Mono
+        # runtime CoreLib (8.0.28), which crashes Mono's assembly load hook
+        # (TypeLoadException on System.Private.CoreLib). The runner's dotnet is
+        # already aligned with its workload, so we just add the android workload.
         run: dotnet workload install android
 
       - name: Install Android SDK + NDK + build tools
