@@ -165,7 +165,9 @@ patch_file(
 patch_file(
     ANDROID_C,
     "void Android_JNI_SetActivityTitle(const char *title)\n{",
-    """bool Android_JNI_IsReady(void)
+    """#pragma GCC visibility push(default)
+
+bool Android_JNI_IsReady(void)
 {
     return mJavaVM != NULL;
 }
@@ -183,7 +185,6 @@ void SDL_AndroidInitNative(void)
     }
 }
 
-__attribute__((visibility("default")))
 void SDL_AndroidSetNativeWindow(ANativeWindow *window)
 {
     if (g_NativeWindow && g_NativeWindow != window) {
@@ -202,7 +203,6 @@ void SDL_AndroidSetNativeWindow(ANativeWindow *window)
 /* DuckGame-Android: convenience wrapper so the managed host doesn't need to
    p/invoke libandroid.so (not preloaded by .NET Android). SDL3 already links
    libandroid, so we do the ANativeWindow_fromSurface conversion here. */
-__attribute__((visibility("default")))
 void SDL_AndroidSetNativeWindowFromSurface(void *env, void *surface)
 {
     if (!surface) {
@@ -213,7 +213,6 @@ void SDL_AndroidSetNativeWindowFromSurface(void *env, void *surface)
     SDL_AndroidSetNativeWindow(window);
 }
 
-__attribute__((visibility("default")))
 void SDL_AndroidSetScreenResolution(int surfaceWidth, int surfaceHeight,
                                     int deviceWidth, int deviceHeight,
                                     float density, float rate)
@@ -221,6 +220,8 @@ void SDL_AndroidSetScreenResolution(int surfaceWidth, int surfaceHeight,
     Android_SetScreenResolution(surfaceWidth, surfaceHeight, deviceWidth,
                                 deviceHeight, density, rate);
 }
+
+#pragma GCC visibility pop
 
 void Android_JNI_SetActivityTitle(const char *title)
 {""",
