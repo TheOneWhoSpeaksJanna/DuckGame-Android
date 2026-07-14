@@ -16,8 +16,15 @@
   <ItemGroup>
     <Compile Include="src/**/*.cs" />
     <Compile Include="Properties/AssemblyInfo.cs" />
-    <!-- Steamworks.NET stub: real Steamworks.NET needs native steam_api (no Android
-         build); this inert shim lets DGSteam load and the game compile unchanged. -->
-    <Compile Include="Stubs/SteamworksStub.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Real Steamworks.NET implementation assembly (valid managed IL). Steam is
+         non-functional on Android (no native steam_api), but referencing the actual
+         managed assembly lets DGSteam.dll compile and load; all Steam calls are
+         guarded by Steam.IsInitialized which is false on Android. -->
+    <Reference Include="Steamworks.NET">
+      <HintPath>..\lib\Steamworks.NET.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
