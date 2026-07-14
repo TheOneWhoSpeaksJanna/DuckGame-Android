@@ -1,9 +1,9 @@
-using System;
 // Compile-time stub for the Steamworks.NET public API used by the game's Steam
 // wrapper (DGSteam). Steam is non-functional on Android (no Steam client / native
 // steam_api), so these inert shims let DGSteam.dll compile and load without the
 // native assembly. All members return dynamic / use exact signatures so any call
 // site binds; the game guards real Steam usage behind Steam.IsInitialized.
+using System;
 namespace Steamworks
 {
     public enum EFriendFlags { k_EFriendFlagBlocked, k_EFriendFlagFriendshipRequested, k_EFriendFlagImmediate, k_EFriendFlagClanMember, k_EFriendFlagOnGameServer, k_EFriendFlagHasPlayedWith, k_EFriendFlagFriend, k_EFriendFlagRequestingFriendship, k_EFriendFlagRequestingFriendshipFromYou, k_EFriendFlagIgnored, k_EFriendFlagIgnoredFriend, k_EFriendFlagSuggested, k_EFriendFlagAll }
@@ -361,162 +361,576 @@ namespace Steamworks
 
     public static class SteamAPI
     {
-        public static dynamic Init() { return null; }
-        public static dynamic RestartAppIfNecessary(object p0) { return null; }
-        public static dynamic RunCallbacks() { return null; }
-        public static dynamic Shutdown() { return null; }
+        public static dynamic Init()
+        {
+        return default;
+        }
+        public static dynamic RestartAppIfNecessary(object p0)
+        {
+        return default;
+        }
+        public static dynamic RunCallbacks()
+        {
+        return default;
+        }
+        public static dynamic Shutdown()
+        {
+        return default;
+        }
     }
     public static class SteamApps
     {
-        public static dynamic BIsSubscribedApp(object p0) { return null; }
-        public static dynamic GetAppBuildId() { return null; }
-        public static dynamic MarkContentCorrupt(object p0) { return null; }
+        public static dynamic BIsSubscribedApp(object p0)
+        {
+        return default;
+        }
+        public static dynamic GetAppBuildId()
+        {
+        return default;
+        }
+        public static dynamic MarkContentCorrupt(object p0)
+        {
+        return default;
+        }
     }
     public static class SteamFriends
     {
-        public static dynamic GetFriendGamePlayed(object p0, out FriendGameInfo_t game) { return default; }
-        public static int GetFriendCount(object p0) { return default; }
-        public static CSteamID GetFriendByIndex(int p0, EFriendFlags p1) { return default; }
-        public static dynamic ActivateGameOverlayInviteDialog(object p0) { return null; }
-        public static dynamic ActivateGameOverlayToWebPage(object p0) { return null; }
-        public static dynamic GetFriendPersonaName(object p0) { return null; }
-        public static dynamic GetFriendPersonaState(object p0) { return null; }
-        public static dynamic GetFriendRelationship(object p0) { return null; }
-        public static dynamic GetMediumFriendAvatar(object p0) { return null; }
-        public static dynamic GetPersonaName() { return null; }
-        public static dynamic GetSmallFriendAvatar(object p0) { return null; }
+        public static dynamic GetFriendGamePlayed(object p0, out FriendGameInfo_t game)
+        {
+        game = default;
+        return default;
+        }
+        public static int GetFriendCount(object p0)
+        {
+        return default;
+        }
+        public static CSteamID GetFriendByIndex(int p0, EFriendFlags p1)
+        {
+        return default;
+        }
+        public static dynamic ActivateGameOverlayInviteDialog(object p0)
+        {
+        return default;
+        }
+        public static dynamic ActivateGameOverlayToWebPage(object p0)
+        {
+        return default;
+        }
+        public static dynamic GetFriendPersonaName(object p0)
+        {
+        return default;
+        }
+        public static dynamic GetFriendPersonaState(object p0)
+        {
+        return default;
+        }
+        public static dynamic GetFriendRelationship(object p0)
+        {
+        return default;
+        }
+        public static dynamic GetMediumFriendAvatar(object p0)
+        {
+        return default;
+        }
+        public static dynamic GetPersonaName()
+        {
+        return default;
+        }
+        public static dynamic GetSmallFriendAvatar(object p0)
+        {
+        return default;
+        }
     }
     public static class SteamMatchmaking
     {
-        public static int GetNumLobbyMembers(CSteamID p0) { return default; }
-        public static CSteamID GetLobbyMemberByIndex(CSteamID p0, int p1) { return default; }
-        public static dynamic AddRequestLobbyListCompatibleMembersFilter(object p0) { return null; }
-        public static dynamic AddRequestLobbyListDistanceFilter(object p0) { return null; }
-        public static dynamic AddRequestLobbyListFilterSlotsAvailable(object p0) { return null; }
-        public static dynamic AddRequestLobbyListNearValueFilter(object p0, object p1) { return null; }
-        public static dynamic AddRequestLobbyListNumericalFilter(object p0, object p1, object p2) { return null; }
-        public static dynamic AddRequestLobbyListResultCountFilter(object p0) { return null; }
-        public static dynamic AddRequestLobbyListStringFilter(object p0, object p1, object p2) { return null; }
-        public static dynamic CreateLobby(object p0, object p1) { return null; }
-        public static dynamic GetLobbyByIndex(object p0) { return null; }
-        public static dynamic GetLobbyChatEntry(object p0, object p1, out CSteamID PlayerID, object p3, object p4, out EChatEntryType peChatEntryType) { return null; }
-        public static dynamic GetLobbyData(object p0, object p1) { return null; }
-        public static dynamic GetLobbyMemberLimit(object p0) { return null; }
-        public static dynamic GetLobbyOwner(object p0) { return null; }
-        public static dynamic InviteUserToLobby(object p0, object p1) { return null; }
-        public static dynamic JoinLobby(object p0) { return null; }
-        public static dynamic LeaveLobby(object p0) { return null; }
-        public static dynamic RequestLobbyList() { return null; }
-        public static dynamic SendLobbyChatMsg(object p0, object p1, object p2) { return null; }
-        public static dynamic SetLobbyData(object p0, object p1, object p2) { return null; }
-        public static dynamic SetLobbyJoinable(object p0, object p1) { return null; }
-        public static dynamic SetLobbyMemberLimit(object p0, object p1) { return null; }
-        public static dynamic SetLobbyOwner(object p0, object p1) { return null; }
-        public static dynamic SetLobbyType(object p0, object p1) { return null; }
+        public static int GetNumLobbyMembers(CSteamID p0)
+        {
+        return default;
+        }
+        public static CSteamID GetLobbyMemberByIndex(CSteamID p0, int p1)
+        {
+        return default;
+        }
+        public static dynamic AddRequestLobbyListCompatibleMembersFilter(object p0)
+        {
+        return default;
+        }
+        public static dynamic AddRequestLobbyListDistanceFilter(object p0)
+        {
+        return default;
+        }
+        public static dynamic AddRequestLobbyListFilterSlotsAvailable(object p0)
+        {
+        return default;
+        }
+        public static dynamic AddRequestLobbyListNearValueFilter(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic AddRequestLobbyListNumericalFilter(object p0, object p1, object p2)
+        {
+        return default;
+        }
+        public static dynamic AddRequestLobbyListResultCountFilter(object p0)
+        {
+        return default;
+        }
+        public static dynamic AddRequestLobbyListStringFilter(object p0, object p1, object p2)
+        {
+        return default;
+        }
+        public static dynamic CreateLobby(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic GetLobbyByIndex(object p0)
+        {
+        return default;
+        }
+        public static dynamic GetLobbyChatEntry(object p0, object p1, out CSteamID PlayerID, object p3, object p4, out EChatEntryType peChatEntryType)
+        {
+        PlayerID = default;
+        peChatEntryType = default;
+        return default;
+        }
+        public static dynamic GetLobbyData(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic GetLobbyMemberLimit(object p0)
+        {
+        return default;
+        }
+        public static dynamic GetLobbyOwner(object p0)
+        {
+        return default;
+        }
+        public static dynamic InviteUserToLobby(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic JoinLobby(object p0)
+        {
+        return default;
+        }
+        public static dynamic LeaveLobby(object p0)
+        {
+        return default;
+        }
+        public static dynamic RequestLobbyList()
+        {
+        return default;
+        }
+        public static dynamic SendLobbyChatMsg(object p0, object p1, object p2)
+        {
+        return default;
+        }
+        public static dynamic SetLobbyData(object p0, object p1, object p2)
+        {
+        return default;
+        }
+        public static dynamic SetLobbyJoinable(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetLobbyMemberLimit(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetLobbyOwner(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetLobbyType(object p0, object p1)
+        {
+        return default;
+        }
     }
     public static class SteamNetworking
     {
-        public static dynamic ReadP2PPacket(byte[] p0, uint p1, out uint p2, out CSteamID p3) { return default; }
-        public static dynamic GetP2PSessionState(CSteamID p0, out P2PSessionState_t ConnectionState) { return default; }
-        public static dynamic IsP2PPacketAvailable(out uint p0) { return default; }
-        public static dynamic SendP2PPacket(CSteamID p0, byte[] p1, uint p2, EP2PSend p3) { return default; }
-        public static dynamic AcceptP2PSessionWithUser(object p0) { return null; }
-        public static dynamic CloseP2PSessionWithUser(object p0) { return null; }
+        public static dynamic ReadP2PPacket(byte[] p0, uint p1, out uint p2, out CSteamID p3)
+        {
+        p2 = default;
+        p3 = default;
+        return default;
+        }
+        public static dynamic GetP2PSessionState(CSteamID p0, out P2PSessionState_t ConnectionState)
+        {
+        ConnectionState = default;
+        return default;
+        }
+        public static dynamic IsP2PPacketAvailable(out uint p0)
+        {
+        p0 = default;
+        return default;
+        }
+        public static dynamic SendP2PPacket(CSteamID p0, byte[] p1, uint p2, EP2PSend p3)
+        {
+        return default;
+        }
+        public static dynamic AcceptP2PSessionWithUser(object p0)
+        {
+        return default;
+        }
+        public static dynamic CloseP2PSessionWithUser(object p0)
+        {
+        return default;
+        }
     }
     public static class SteamNetworkingUtils
     {
-        public static dynamic ParsePingLocationString(string p0, out SteamNetworkPingLocation_t pingL) { return default; }
-        public static dynamic EstimatePingTimeFromLocalHost(ref SteamNetworkPingLocation_t pingL) { return default; }
-        public static dynamic GetLocalPingLocation(out SteamNetworkPingLocation_t pingL) { return default; }
-        public static dynamic ConvertPingLocationToString(ref SteamNetworkPingLocation_t pingL, out string pszbuff, uint p2) { return default; }
-        public static dynamic InitRelayNetworkAccess() { return null; }
+        public static dynamic ParsePingLocationString(string p0, out SteamNetworkPingLocation_t pingL)
+        {
+        pingL = default;
+        return default;
+        }
+        public static dynamic EstimatePingTimeFromLocalHost(ref SteamNetworkPingLocation_t pingL)
+        {
+        pingL = default;
+        return default;
+        }
+        public static dynamic GetLocalPingLocation(out SteamNetworkPingLocation_t pingL)
+        {
+        pingL = default;
+        return default;
+        }
+        public static dynamic ConvertPingLocationToString(ref SteamNetworkPingLocation_t pingL, out string pszbuff, uint p2)
+        {
+        pingL = default;
+        pszbuff = default;
+        return default;
+        }
+        public static dynamic InitRelayNetworkAccess()
+        {
+        return default;
+        }
     }
     public static class SteamRemoteStorage
     {
-        public static string GetFileNameAndSize(string p0, out int p1) { return default; }
-        public static dynamic FileDelete(object p0) { return null; }
-        public static dynamic FileExists(object p0) { return null; }
-        public static dynamic FileRead(object p0, object p1, object p2) { return null; }
-        public static dynamic FileWrite(object p0, object p1, object p2) { return null; }
-        public static dynamic GetFileCount() { return null; }
-        public static dynamic GetFileSize(object p0) { return null; }
-        public static dynamic GetFileTimestamp(object p0) { return null; }
-        public static dynamic IsCloudEnabledForAccount() { return null; }
-        public static dynamic IsCloudEnabledForApp() { return null; }
+        public static string GetFileNameAndSize(int p0, out int p1)
+        {
+        p1 = default;
+        return default;
+        }
+        public static dynamic FileDelete(object p0)
+        {
+        return default;
+        }
+        public static dynamic FileExists(object p0)
+        {
+        return default;
+        }
+        public static dynamic FileRead(object p0, object p1, object p2)
+        {
+        return default;
+        }
+        public static dynamic FileWrite(object p0, object p1, object p2)
+        {
+        return default;
+        }
+        public static dynamic GetFileCount()
+        {
+        return default;
+        }
+        public static dynamic GetFileSize(object p0)
+        {
+        return default;
+        }
+        public static dynamic GetFileTimestamp(object p0)
+        {
+        return default;
+        }
+        public static dynamic IsCloudEnabledForAccount()
+        {
+        return default;
+        }
+        public static dynamic IsCloudEnabledForApp()
+        {
+        return default;
+        }
     }
     public static class SteamUGC
     {
-        public static dynamic GetItemInstallInfo(object p0, out ulong SizeOnDisk, out string Folder, object p3, out uint punTimeStamp) { return default; }
-        public static dynamic GetQueryUGCResult(object p0, object p1, out SteamUGCDetails_t details) { return default; }
-        public static dynamic GetQueryUGCPreviewURL(object p0, object p1, out string previewURL, object p3) { return default; }
-        public static dynamic GetQueryUGCMetadata(object p0, object p1, out string metadata, object p3) { return default; }
-        public static dynamic GetQueryUGCAdditionalPreview(object p0, object p1, object p2, out string url, object p4, out string name, object p6, out EItemPreviewType type) { return default; }
-        public static dynamic GetQueryUGCStatistic(object p0, object p1, object p2, out ulong val) { return default; }
-        public static dynamic GetItemDownloadInfo(object p0, out ulong bytesDownloaded, out ulong bytesTotal) { return default; }
-        public static dynamic GetItemUpdateProgress(object p0, out ulong bytesDownloaded, out ulong bytesTotal) { return default; }
-        public static dynamic AddDependency(object p0, object p1) { return null; }
-        public static dynamic AddExcludedTag(object p0, object p1) { return null; }
-        public static dynamic AddRequiredTag(object p0, object p1) { return null; }
-        public static dynamic CreateItem(object p0, object p1) { return null; }
-        public static dynamic CreateQueryAllUGCRequest(object p0, object p1, object p2, object p3, object p4) { return null; }
-        public static dynamic CreateQueryUGCDetailsRequest(object p0, object p1) { return null; }
-        public static dynamic CreateQueryUserUGCRequest(object p0, object p1, object p2, object p3, object p4, object p5, object p6) { return null; }
-        public static dynamic DownloadItem(object p0, object p1) { return null; }
-        public static dynamic GetItemState(object p0) { return null; }
-        public static dynamic GetNumSubscribedItems() { return null; }
-        public static dynamic GetQueryUGCChildren(object p0, object p1, object p2, object p3) { return null; }
-        public static dynamic GetQueryUGCNumAdditionalPreviews(object p0, object p1) { return null; }
-        public static dynamic GetSubscribedItems(object p0, object p1) { return null; }
-        public static dynamic ReleaseQueryUGCRequest(object p0) { return null; }
-        public static dynamic RemoveDependency(object p0, object p1) { return null; }
-        public static dynamic SendQueryUGCRequest(object p0) { return null; }
-        public static dynamic SetAllowCachedResponse(object p0, object p1) { return null; }
-        public static dynamic SetCloudFileNameFilter(object p0, object p1) { return null; }
-        public static dynamic SetItemContent(object p0, object p1) { return null; }
-        public static dynamic SetItemDescription(object p0, object p1) { return null; }
-        public static dynamic SetItemPreview(object p0, object p1) { return null; }
-        public static dynamic SetItemTags(object p0, object p1) { return null; }
-        public static dynamic SetItemTitle(object p0, object p1) { return null; }
-        public static dynamic SetItemVisibility(object p0, object p1) { return null; }
-        public static dynamic SetMatchAnyTag(object p0, object p1) { return null; }
-        public static dynamic SetRankedByTrendDays(object p0, object p1) { return null; }
-        public static dynamic SetReturnAdditionalPreviews(object p0, object p1) { return null; }
-        public static dynamic SetReturnChildren(object p0, object p1) { return null; }
-        public static dynamic SetReturnLongDescription(object p0, object p1) { return null; }
-        public static dynamic SetReturnMetadata(object p0, object p1) { return null; }
-        public static dynamic SetReturnOnlyIDs(object p0, object p1) { return null; }
-        public static dynamic SetReturnTotalOnly(object p0, object p1) { return null; }
-        public static dynamic SetSearchText(object p0, object p1) { return null; }
-        public static dynamic StartItemUpdate(object p0, object p1) { return null; }
-        public static dynamic SubmitItemUpdate(object p0, object p1) { return null; }
-        public static dynamic SubscribeItem(object p0) { return null; }
-        public static dynamic UnsubscribeItem(object p0) { return null; }
+        public static dynamic GetItemInstallInfo(object p0, out ulong SizeOnDisk, out string Folder, object p3, out uint punTimeStamp)
+        {
+        SizeOnDisk = default;
+        Folder = default;
+        punTimeStamp = default;
+        return default;
+        }
+        public static dynamic GetQueryUGCResult(object p0, object p1, out SteamUGCDetails_t details)
+        {
+        details = default;
+        return default;
+        }
+        public static dynamic GetQueryUGCPreviewURL(object p0, object p1, out string previewURL, object p3)
+        {
+        previewURL = default;
+        return default;
+        }
+        public static dynamic GetQueryUGCMetadata(object p0, object p1, out string metadata, object p3)
+        {
+        metadata = default;
+        return default;
+        }
+        public static dynamic GetQueryUGCAdditionalPreview(object p0, object p1, object p2, out string url, object p4, out string name, object p6, out EItemPreviewType type)
+        {
+        url = default;
+        name = default;
+        type = default;
+        return default;
+        }
+        public static dynamic GetQueryUGCStatistic(object p0, object p1, object p2, out ulong val)
+        {
+        val = default;
+        return default;
+        }
+        public static dynamic GetItemDownloadInfo(object p0, out ulong bytesDownloaded, out ulong bytesTotal)
+        {
+        bytesDownloaded = default;
+        bytesTotal = default;
+        return default;
+        }
+        public static dynamic GetItemUpdateProgress(object p0, out ulong bytesDownloaded, out ulong bytesTotal)
+        {
+        bytesDownloaded = default;
+        bytesTotal = default;
+        return default;
+        }
+        public static dynamic AddDependency(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic AddExcludedTag(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic AddRequiredTag(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic CreateItem(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic CreateQueryAllUGCRequest(object p0, object p1, object p2, object p3, object p4)
+        {
+        return default;
+        }
+        public static dynamic CreateQueryUGCDetailsRequest(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic CreateQueryUserUGCRequest(object p0, object p1, object p2, object p3, object p4, object p5, object p6)
+        {
+        return default;
+        }
+        public static dynamic DownloadItem(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic GetItemState(object p0)
+        {
+        return default;
+        }
+        public static dynamic GetNumSubscribedItems()
+        {
+        return default;
+        }
+        public static dynamic GetQueryUGCChildren(object p0, object p1, object p2, object p3)
+        {
+        return default;
+        }
+        public static dynamic GetQueryUGCNumAdditionalPreviews(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic GetSubscribedItems(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic ReleaseQueryUGCRequest(object p0)
+        {
+        return default;
+        }
+        public static dynamic RemoveDependency(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SendQueryUGCRequest(object p0)
+        {
+        return default;
+        }
+        public static dynamic SetAllowCachedResponse(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetCloudFileNameFilter(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetItemContent(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetItemDescription(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetItemPreview(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetItemTags(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetItemTitle(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetItemVisibility(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetMatchAnyTag(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetRankedByTrendDays(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetReturnAdditionalPreviews(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetReturnChildren(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetReturnLongDescription(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetReturnMetadata(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetReturnOnlyIDs(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetReturnTotalOnly(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SetSearchText(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic StartItemUpdate(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SubmitItemUpdate(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic SubscribeItem(object p0)
+        {
+        return default;
+        }
+        public static dynamic UnsubscribeItem(object p0)
+        {
+        return default;
+        }
     }
     public static class SteamUser
     {
-        public static CSteamID GetSteamID() { return default; }
+        public static CSteamID GetSteamID()
+        {
+        return default;
+        }
     }
     public static class SteamUserStats
     {
-        public static dynamic GetStat(string p0, out float val) { return default; }
-        public static dynamic GetGlobalStat(string p0, out double val) { return default; }
-        public static dynamic GetAchievement(object p0, out bool hasAchievement) { return null; }
-        public static dynamic GetGlobalStatHistory(object p0, object p1, object p2) { return null; }
-        public static dynamic GetLeaderboardName(object p0) { return null; }
-        public static dynamic IndicateAchievementProgress(object p0, object p1, object p2) { return null; }
-        public static dynamic RequestGlobalStats(object p0) { return null; }
-        public static dynamic SetAchievement(object p0) { return null; }
-        public static dynamic SetStat(object p0, object p1) { return null; }
-        public static dynamic StoreStats() { return null; }
-        public static dynamic UploadLeaderboardScore(object p0, object p1, object p2, object p3, object p4) { return null; }
+        public static dynamic GetStat(string p0, out float val)
+        {
+        val = default;
+        return default;
+        }
+        public static dynamic GetGlobalStat(string p0, out double val)
+        {
+        val = default;
+        return default;
+        }
+        public static dynamic GetAchievement(string p0, out bool hasAchievement)
+        {
+        hasAchievement = default;
+        return default;
+        }
+        public static dynamic GetGlobalStatHistory(object p0, object p1, object p2)
+        {
+        return default;
+        }
+        public static dynamic GetLeaderboardName(object p0)
+        {
+        return default;
+        }
+        public static dynamic IndicateAchievementProgress(object p0, object p1, object p2)
+        {
+        return default;
+        }
+        public static dynamic RequestGlobalStats(object p0)
+        {
+        return default;
+        }
+        public static dynamic SetAchievement(object p0)
+        {
+        return default;
+        }
+        public static dynamic SetStat(object p0, object p1)
+        {
+        return default;
+        }
+        public static dynamic StoreStats()
+        {
+        return default;
+        }
+        public static dynamic UploadLeaderboardScore(object p0, object p1, object p2, object p3, object p4)
+        {
+        return default;
+        }
     }
     public static class SteamUtils
     {
-        public static dynamic GetImageSize(object p0, out uint w, out uint h) { return default; }
-        public static dynamic GetImageRGBA(object p0, byte[] p1, int p2) { return default; }
-        public static dynamic GetEnteredGamepadTextInput(out string szTextInput, uint p1) { return default; }
-        public static dynamic ShowGamepadTextInput(EGamepadTextInputMode p0, EGamepadTextInputLineMode p1, string p2, uint p3, string p4) { return default; }
-        public static dynamic GetAppID() { return null; }
-        public static dynamic GetEnteredGamepadTextLength() { return null; }
+        public static dynamic GetImageSize(object p0, out uint w, out uint h)
+        {
+        w = default;
+        h = default;
+        return default;
+        }
+        public static dynamic GetImageRGBA(object p0, byte[] p1, int p2)
+        {
+        return default;
+        }
+        public static dynamic GetEnteredGamepadTextInput(out string szTextInput, uint p1)
+        {
+        szTextInput = default;
+        return default;
+        }
+        public static dynamic ShowGamepadTextInput(EGamepadTextInputMode p0, EGamepadTextInputLineMode p1, string p2, uint p3, string p4)
+        {
+        return default;
+        }
+        public static dynamic GetAppID()
+        {
+        return default;
+        }
+        public static dynamic GetEnteredGamepadTextLength()
+        {
+        return default;
+        }
     }
 }
