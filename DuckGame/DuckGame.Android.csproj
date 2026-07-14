@@ -65,13 +65,12 @@
     <Reference Include="Mono.Cecil"><HintPath>lib\Mono.Cecil.dll</HintPath></Reference>
     <Reference Include="Mono.Cecil.Mdb"><HintPath>lib\Mono.Cecil.Mdb.dll</HintPath></Reference>
     <Reference Include="Mono.Cecil.Pdb"><HintPath>lib\Mono.Cecil.Pdb.dll</HintPath></Reference>
-    <!-- MonoMod.exe is the full MonoMod (includes MonoModExt etc). .NET Android
-         silently drops .exe references, so we ship it as MonoMod.dll (renamed
-         copy) so the runtime can Assembly.Load("MonoMod") without crashing.
-         MonoMod.Utils.dll is a SEPARATE assembly MonoMod depends on; both are
-         required (ModLoader uses MonoMod.Utils). -->
+    <!-- MonoMod.exe is the full MonoMod (includes MonoMod.Utils / MonoModExt).
+         .NET Android silently drops .exe references, so we ship it as
+         MonoMod.dll (renamed copy) so the runtime can Assembly.Load("MonoMod")
+         without crashing. Do NOT also add MonoMod.Utils.dll — it's a duplicate
+         of the MonoModExt types already inside MonoMod.dll. -->
     <Reference Include="MonoMod"><HintPath>lib\MonoMod.dll</HintPath></Reference>
-    <Reference Include="MonoMod.Utils"><HintPath>lib\MonoMod.Utils.dll</HintPath></Reference>
     <Reference Include="NAudio"><HintPath>lib\NAudio.dll</HintPath></Reference>
     <Reference Include="NVorbis.NAudioSupport"><HintPath>lib\NVorbis.NAudioSupport.dll</HintPath></Reference>
     <Reference Include="0Harmony"><HintPath>lib\0Harmony.dll</HintPath></Reference>
