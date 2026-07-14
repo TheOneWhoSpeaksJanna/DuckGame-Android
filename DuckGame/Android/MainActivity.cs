@@ -6,7 +6,6 @@ using Android.Content.PM;
 using Android.OS;
 using Android.Util;
 using Android.Views;
-using Android.Content.PM;
 
 [assembly: UsesPermission(Android.Manifest.Permission.Internet)]
 [assembly: UsesPermission(Android.Manifest.Permission.AccessNetworkState)]
@@ -20,7 +19,7 @@ namespace DuckGame.Android
     /// real Duck Game game loop on a dedicated thread. No game logic is modified;
     /// this only launches DuckGame.Program.Main on Android.
     /// </summary>
-    [Activity(Label = "Duck Game", MainLauncher = true, Theme = "@android:style/Theme.NoTitleBar.Fullscreen",
+    [Activity(Label = "Duck Game", Icon = "@mipmap/ic_launcher", MainLauncher = true, Theme = "@android:style/Theme.NoTitleBar.Fullscreen",
               ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenSize,
               HardwareAccelerated = true, ScreenOrientation = ScreenOrientation.Landscape)]
     public class MainActivity : Activity

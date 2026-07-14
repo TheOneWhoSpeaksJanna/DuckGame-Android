@@ -16,14 +16,9 @@
   <ItemGroup>
     <Compile Include="src/**/*.cs" />
     <Compile Include="Properties/AssemblyInfo.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Steamworks.NET implementation assembly (committed, valid managed IL). Steam
-         is non-functional on Android (no native steam_api), but the managed assembly
-         lets DGSteam compile and load; Steam calls are guarded by Steam.IsInitialized. -->
-    <Reference Include="Steamworks.NET">
-      <HintPath>lib\Steamworks.NET.dll</HintPath>
-    </Reference>
+    <!-- Steamworks.NET compile-time stub: the real Steamworks.NET needs a native
+         steam_api (no Android build) and its managed impl fails to load under Mono
+         on Android. This inert shim provides the exact API surface DGSteam uses. -->
+    <Compile Include="Stubs/SteamworksStub.cs" />
   </ItemGroup>
 </Project>
