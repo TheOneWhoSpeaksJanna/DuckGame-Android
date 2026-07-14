@@ -81,6 +81,10 @@
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
     <PackageReference Include="System.CodeDom" Version="8.0.0" />
+    <!-- Steamworks.NET: bundled so DGSteam.dll (which references it) can load at
+         runtime on Android. Steam is non-functional on device but the managed
+         assembly must be present for the game to start. -->
+    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
     <!-- Roslyn 4.8.0 (ModLoader compiles mods / XMLLevel) -->
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
