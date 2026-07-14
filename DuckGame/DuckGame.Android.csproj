@@ -86,6 +86,10 @@
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
     <PackageReference Include="System.CodeDom" Version="8.0.0" />
+    <!-- Steamworks.NET must be deployed into the APK so DGSteam.dll can resolve
+         its (managed) types at runtime. No native steam_api is loaded because
+         SteamAPI.Init() is a no-op on Android. -->
+    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
     <!-- The game's Steam wrapper (DGSteam, Steam.Android.csproj) now
          compiles against the real Steamworks.NET NuGet. SteamAPI.Init() is
          guarded to a no-op on Android (__ANDROID__), so no native
