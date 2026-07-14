@@ -214,6 +214,7 @@ namespace DuckGame.Android
                 if (_isRedroid)
                 {
                     SDL.SDL_SetHint("FNA3D_FORCE_DRIVER", "OpenGL");
+                    Log.Info("DuckGame", "set FNA3D_FORCE_DRIVER=OpenGL; readback=" + SDL.SDL_GetHint("FNA3D_FORCE_DRIVER"));
                 }
 
                 // Start the readback-blit pump (redroid only). It reads the
