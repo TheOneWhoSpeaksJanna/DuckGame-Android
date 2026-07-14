@@ -33,8 +33,11 @@ git clone --depth 1 --branch "$SDL_TAG" https://github.com/libsdl-org/SDL.git /t
 # Set SDL3 paths BEFORE first build_cmake call (it references SDL3_INCLUDE_DIR).
 export SDL3_INCLUDE_DIR="/tmp/SDL3/include"
 export SDL3_DIR="/tmp/SDL3/build-android/SDL3Config.cmake"
-export SDL3_LIB="$(find /tmp/SDL3/build-android -name 'libSDL3.so' | head -1)"
 build_cmake sdl3 /tmp/SDL3 "-DSDL_STATIC=OFF -DSDL_SHARED=ON -DANDROID=ON"
+# build_cmake already copied libSDL3*.so into OUT; make a clean libSDL3.so for linking.
+SDL3_REAL="$(find "$OUT" -name 'libSDL3*.so*' | head -1)"
+cp -f "$SDL3_REAL" "$OUT/libSDL3.so"
+export SDL3_LIB="$OUT/libSDL3.so"
 
 # ---- FAudio ----
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
