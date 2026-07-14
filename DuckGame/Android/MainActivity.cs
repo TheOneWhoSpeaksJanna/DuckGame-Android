@@ -7,6 +7,7 @@ using Android.Content.PM;
 using Android.OS;
 using Android.Util;
 using Android.Views;
+using SDL3;
 
 [assembly: UsesPermission(Android.Manifest.Permission.Internet)]
 [assembly: UsesPermission(Android.Manifest.Permission.AccessNetworkState)]
@@ -132,9 +133,10 @@ namespace DuckGame.Android
             _surfaceReady.WaitOne();
             try
             {
-                // DIAGNOSTIC: make SDL log everything (verbose) to logcat so we
-                // can see which video driver/EGL path FNA takes on Android.
-                System.Environment.SetEnvironmentVariable("SDL_LOGGING", "verbose");
+                // DIAGNOSTIC: force the Android video driver and verbose SDL
+                // logging so we can see exactly which EGL path FNA takes.
+                SDL.SDL_SetHint("SDL_VIDEODRIVER", "android");
+                SDL.SDL_SetHint("SDL_LOGGING", "verbose");
                 global::DuckGame.Program.Main(new string[0]);
             }
             catch (Exception ex)
