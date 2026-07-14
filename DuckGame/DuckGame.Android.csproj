@@ -26,7 +26,6 @@
 
   <!-- Compile the real game source verbatim; exclude only Windows-only files -->
   <ItemGroup>
-    <!-- Windows-only / desktop-only files that cannot compile for Android -->
     <Compile Remove="src/WindowsPlatformStartup.cs" />
     <Compile Remove="src/MonoTime/Modding/ModLoader/ModLoader.cs" />
     <Compile Remove="src/MonoTime/File/RtfWriter.cs" />
@@ -37,8 +36,6 @@
     <Compile Remove="src/DebugMonitor.cs" />
     <Compile Remove="src/DiscordRichPresence.cs" />
     <Compile Remove="src/MonoTime/Console/Commands/DansTestArea.cs" />
-    <Compile Remove="src/DuckGame/Levels/XMLLevel.cs" />
-    <Compile Remove="src/MonoTime/Console/NetworkConsole.resx" />
     <!-- Duplicate of src/XnaToFna/ConnectionIndicator.cs (identical) -->
     <Compile Remove="src/XnaToFna/ModCompatibility/ConnectionIndicator.cs" />
     <!-- Root AssemblyInfo duplicates the SDK-generated one and uses removed SecurityPermission -->
@@ -54,9 +51,24 @@
   <!-- FNA engine (managed; native libs loaded at runtime) -->
   <ItemGroup>
     <ProjectReference Include="..\FNA\FNA.Core.csproj" />
+    <!-- Game's own Steam wrapper (global-namespace Lobby/User/Steam types) -->
+    <ProjectReference Include="Steam\Steam.Android.csproj" />
   </ItemGroup>
 
-  <!-- NuGet dependencies the game actually uses (multi-target netstandard2.0/net8) -->
+  <!-- Original local DLLs (exact binaries the game was built against) -->
+  <ItemGroup>
+    <Reference Include="Mono.Cecil"><HintPath>lib\Mono.Cecil.dll</HintPath></Reference>
+    <Reference Include="Mono.Cecil.Mdb"><HintPath>lib\Mono.Cecil.Mdb.dll</HintPath></Reference>
+    <Reference Include="Mono.Cecil.Pdb"><HintPath>lib\Mono.Cecil.Pdb.dll</HintPath></Reference>
+    <Reference Include="MonoMod"><HintPath>lib\MonoMod.exe</HintPath></Reference>
+    <Reference Include="MonoMod.Utils"><HintPath>lib\MonoMod.Utils.dll</HintPath></Reference>
+    <Reference Include="NAudio"><HintPath>lib\NAudio.dll</HintPath></Reference>
+    <Reference Include="NVorbis.NAudioSupport"><HintPath>lib\NVorbis.NAudioSupport.dll</HintPath></Reference>
+    <Reference Include="0Harmony"><HintPath>lib\0Harmony.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Bcl.HashCode"><HintPath>lib\Microsoft.Bcl.HashCode.dll</HintPath></Reference>
+  </ItemGroup>
+
+  <!-- NuGet dependencies (multi-target netstandard2.0/net8) -->
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
@@ -67,8 +79,7 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
-    <PackageReference Include="Mono.Cecil" Version="0.11.5" />
-    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
+    <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
   </ItemGroup>
 
   <!-- Bundle game content + assets into the APK -->
