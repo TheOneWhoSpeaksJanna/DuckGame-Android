@@ -1,0 +1,60 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      - name: Install Android SDK (build-tools + platforms)
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-34" "build-tools;34.0.0"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+
+      - name: Fetch FNA prebuilt Android native libs
+        run: |
+          mkdir -p DuckGame/libs/arm64-v8a
+          # Official FNA prebuilt native libs bundle (includes Android arm64)
+          curl -fsSL -o fnalibs.tar.bz2 "https://fna.fna-xna.com/archive/fnalibs.tar.bz2" \
+            || curl -fsSL -o fnalibs.tar.bz2 "https://github.com/FNA-XNA/FNA/releases/latest/download/fnalibs.tar.bz2"
+          tar -tjf fnalibs.tar.bz2 | head
+          mkdir -p /tmp/fnalibs
+          tar -xjf fnalibs.tar.bz2 -C /tmp/fnalibs
+          # Copy Android arm64 native libs into the expected folder
+          find /tmp/fnalibs -path "*Android*" -name "*.so" -exec cp {} DuckGame/libs/arm64-v8a/ \;
+          ls -la DuckGame/libs/arm64-v8a/ || true
+
+      - name: Restore
+        run: dotnet restore DuckGame/DuckGame.Android.csproj
+
+      - name: Build release APK
+        run: |
+          dotnet build DuckGame/DuckGame.Android.csproj \
+            -c Release \
+            -f net8.0-android \
+            -p:AndroidSdkDirectory=$ANDROID_HOME \
+            -p:AndroidNdkDirectory=$ANDROID_NDK_HOME
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DuckGame-android-apk
+          path: "DuckGame/bin/Release/net8.0-android/*-Signed.apk"
+          if-no-files-found: warn
