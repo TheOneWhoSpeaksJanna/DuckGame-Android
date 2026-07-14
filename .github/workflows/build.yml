@@ -22,24 +22,18 @@ jobs:
       - name: Install Android workload
         run: dotnet workload install android
 
-      - name: Install Android SDK (build-tools + platforms)
+      - name: Install Android SDK + NDK + build tools
         run: |
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
-            "platforms;android-34" "build-tools;34.0.0"
+            "platforms;android-34" "build-tools;34.0.0" "ndk;25.2.9519653"
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> "$GITHUB_ENV"
 
-      - name: Fetch FNA prebuilt Android native libs
-        run: |
-          mkdir -p DuckGame/libs/arm64-v8a
-          # Official FNA prebuilt native libs bundle (includes Android arm64)
-          curl -fsSL -o fnalibs.tar.bz2 "https://fna.fna-xna.com/archive/fnalibs.tar.bz2" \
-            || curl -fsSL -o fnalibs.tar.bz2 "https://github.com/FNA-XNA/FNA/releases/latest/download/fnalibs.tar.bz2"
-          tar -tjf fnalibs.tar.bz2 | head
-          mkdir -p /tmp/fnalibs
-          tar -xjf fnalibs.tar.bz2 -C /tmp/fnalibs
-          # Copy Android arm64 native libs into the expected folder
-          find /tmp/fnalibs -path "*Android*" -name "*.so" -exec cp {} DuckGame/libs/arm64-v8a/ \;
-          ls -la DuckGame/libs/arm64-v8a/ || true
+      - name: Install ninja + cmake
+        run: sudo apt-get update && sudo apt-get install -y ninja-build cmake
+
+      - name: Build FNA native libs for Android (arm64-v8a)
+        run: bash build-android-libs.sh "$PWD/DuckGame/libs/arm64-v8a"
 
       - name: Restore
         run: dotnet restore DuckGame/DuckGame.Android.csproj
@@ -47,8 +41,7 @@ jobs:
       - name: Build release APK
         run: |
           dotnet build DuckGame/DuckGame.Android.csproj \
-            -c Release \
-            -f net8.0-android \
+            -c Release -f net8.0-android \
             -p:AndroidSdkDirectory=$ANDROID_HOME \
             -p:AndroidNdkDirectory=$ANDROID_NDK_HOME
 
