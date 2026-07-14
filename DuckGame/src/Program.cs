@@ -1244,12 +1244,14 @@ namespace DuckGame
         {
             try
             {
+                Console.Error.WriteLine("[DUCKCRASH] " + s);
                 StreamWriter streamWriter = new StreamWriter("ducklog.txt", true);
                 streamWriter.WriteLine(s + "\n");
                 streamWriter.Close();
             }
             catch (Exception ex)
             {
+                Console.Error.WriteLine("[DUCKCRASH] " + ex.ToString());
                 StreamWriter streamWriter = new StreamWriter("ducklog.txt", true);
                 streamWriter.WriteLine(ex.ToString() + "\n");
                 streamWriter.Close();
