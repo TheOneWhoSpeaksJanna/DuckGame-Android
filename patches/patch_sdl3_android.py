@@ -481,6 +481,8 @@ patch_file(
     "#include <dlfcn.h>\n",
     """#include <dlfcn.h>
 
+#include <GLES3/gl3.h>
+
 /* DuckGame-Android: optional readback-blit capture (see module docs). When
    g_DuckGameCapture is set, Android_GLES_SwapWindow reads the backbuffer into
    a malloc'd RGBA buffer the managed host can blit onto a Canvas View. */
@@ -530,7 +532,7 @@ patch_file(
                 g_DuckGamePixH = h;
             }
             if (g_DuckGamePixels) {
-                SDL_GL_ReadPixels(0, 0, w, h, 0x1908 /*RGBA*/, 0x1401 /*UNSIGNED_BYTE*/, g_DuckGamePixels);
+                glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, g_DuckGamePixels);
             }
         }
     }
