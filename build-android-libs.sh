@@ -73,7 +73,7 @@ echo "--- dynamic (exported) symbols matching SDL_DuckGame: ---"
 "$NM" -D "$SDL3_REAL" 2>/dev/null | grep "SDL_DuckGame" || echo "(none in dynamic table)"
 echo "--- ALL (including hidden) symbols matching SDL_DuckGame: ---"
 "$NM" "$SDL3_REAL" 2>/dev/null | grep "SDL_DuckGame" || echo "(none anywhere)"
-CAPCOUNT="$(\"$NM\" -D \"$SDL3_REAL\" 2>/dev/null | grep -c \"SDL_DuckGame\")"
+CAPCOUNT=$( "$NM" -D "$SDL3_REAL" 2>/dev/null | grep -c "SDL_DuckGame" )
 echo "exported SDL_DuckGame symbol count = $CAPCOUNT"
 if [ "$CAPCOUNT" -ge 2 ]; then
   echo "OK: capture symbols exported"
