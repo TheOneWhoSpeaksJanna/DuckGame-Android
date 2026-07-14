@@ -46,6 +46,7 @@ namespace DuckGame.Android
         private BlitView _blitView;
         private Thread _blitThread;
         private volatile bool _blitRunning;
+        private bool _isRedroid;
         private readonly ManualResetEvent _surfaceReady = new ManualResetEvent(false);
 
         // redroid is detected at runtime; on it we use the readback-blit path
@@ -139,6 +140,7 @@ namespace DuckGame.Android
             // captured backbuffer so the game is actually visible. On real
             // devices this is skipped and the SurfaceView is shown natively.
             bool redroid = IsRedroid();
+            _isRedroid = redroid;
             if (redroid)
             {
                 _blitView = new BlitView(this);
@@ -209,7 +211,7 @@ namespace DuckGame.Android
                 // texture instead). Force the OpenGL driver so the readback
                 // path works. Real devices use the native SurfaceView path and
                 // keep the default (GPU) driver for best performance.
-                if (redroid)
+                if (_isRedroid)
                 {
                     SDL.SDL_SetHint("FNA3D_DRIVER", "OpenGL");
                 }
