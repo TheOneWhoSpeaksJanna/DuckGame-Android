@@ -45,6 +45,9 @@
   <!-- FNA engine (managed; native libs loaded at runtime) -->
   <ItemGroup>
     <ProjectReference Include="..\FNA\FNA.Core.csproj" />
+    <!-- Game's own Steam wrapper (global-namespace Lobby/User/Steam types); uses an
+         inert Steamworks stub so it loads without the native steam_api on Android. -->
+    <ProjectReference Include="Steam\Steam.Android.csproj" />
   </ItemGroup>
 
   <!-- Original local DLLs (exact binaries the game was built against) -->
