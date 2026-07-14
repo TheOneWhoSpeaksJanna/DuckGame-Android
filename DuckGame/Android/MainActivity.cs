@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -13,6 +14,33 @@ using Android.Views;
 
 namespace DuckGame.Android
 {
+    // SDL3's Android video driver needs the ART JavaVM pointer (normally handed
+    // in by SDL's Java SDLActivity glue, which FNA's desktop SDL_Init path
+    // never does). Without it, SDL_Init(VIDEO) null-derefs inside
+    // Android_JNI_InitTouch. We fetch the already-created ART JavaVM and
+    // pass it to SDL before the game inits video.
+    internal static class SdlAndroidBridge
+    {
+        [DllImport("libnativehelper.so")]
+        private static extern int JNI_GetCreatedJavaVMs(out IntPtr vm, int bufLen, out int nVMs);
+
+        [DllImport("libSDL3.so")]
+        private static extern void SDL_SetJavaVM(IntPtr vm);
+
+        public static void Init()
+        {
+            try
+            {
+                if (JNI_GetCreatedJavaVMs(out IntPtr javaVM, 1, out int nVMs) == 0 && nVMs > 0 && javaVM != IntPtr.Zero)
+                    SDL_SetJavaVM(javaVM);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("DuckGame", "SDL Android JVM bridge failed: " + ex);
+            }
+        }
+    }
+
     /// <summary>
     /// FNA/XNA Android activity. Hosts the game window via SDL3 and runs the
     /// real Duck Game game loop on a dedicated thread. No game logic is modified;
@@ -59,11 +87,12 @@ namespace DuckGame.Android
             _gamepad = new TouchGamepadView(this);
             AddContentView(_gamepad, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
 
+            // Hand SDL the ART JavaVM before FNA inits video (SDL's Android
+            // driver null-derefs its JavaVM* otherwise).
+            SdlAndroidBridge.Init();
+
             // FNA/SDL must own the main (UI) thread and the Android surface, so run
             // the real game loop directly on this thread (it blocks until exit).
-            // Running it on a background thread let Android's lifecycle destroy the
-            // SDL window mutex from the wrong context -> "pthread_mutex_lock on a
-            // destroyed mutex" crash ~2s after launch.
             try
             {
                 global::DuckGame.Program.Main(new string[0]);
