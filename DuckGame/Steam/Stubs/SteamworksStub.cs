@@ -1,3 +1,4 @@
+using System;
 // Compile-time stub for the Steamworks.NET public API used by the game's Steam
 // wrapper (DGSteam). Steam is non-functional on Android (no Steam client / native
 // steam_api), so these inert shims let DGSteam.dll compile and load without the
