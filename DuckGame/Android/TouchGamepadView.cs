@@ -5,7 +5,7 @@ using Android.Graphics;
 using Android.Views;
 using SDL3;
 
-namespace DuckGame.AndroidHost
+namespace DuckGame.Android
 {
     /// <summary>
     /// Transparent on-screen gamepad drawn over the SDL surface. Touching a button

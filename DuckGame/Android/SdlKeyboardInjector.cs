@@ -1,7 +1,7 @@
 using System;
 using SDL3;
 
-namespace DuckGame.AndroidHost
+namespace DuckGame.Android
 {
     /// <summary>
     /// Bridges on-screen touch buttons to the real Duck Game by injecting genuine

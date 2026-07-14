@@ -7,7 +7,7 @@ using Android.OS;
 using Android.Util;
 using Android.Views;
 
-namespace DuckGame.AndroidHost
+namespace DuckGame.Android
 {
     /// <summary>
     /// FNA/XNA Android activity. Hosts the game window via SDL3 and runs the
