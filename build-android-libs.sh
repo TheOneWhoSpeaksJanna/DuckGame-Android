@@ -68,21 +68,6 @@ else
   echo "FAIL: fewer than 4 bridge symbols exported"; exit 1
 fi
 
-echo "=== verifying FNA3D capture symbol exports ==="
-FNA3D_SO="$(find "$OUT" -name 'libFNA3D.so' 2>/dev/null | head -1)"
-echo "libFNA3D.so = $FNA3D_SO"
-if [ -z "$FNA3D_SO" ]; then
-  echo "FAIL: libFNA3D.so not found under $OUT"; exit 1
-fi
-"$NM" -D "$FNA3D_SO" 2>/dev/null | grep "DuckGame" || echo "(none in dynamic table)"
-CAPCOUNT=$( "$NM" -D "$FNA3D_SO" 2>/dev/null | grep -c "DuckGame" )
-echo "exported DuckGame symbol count = $CAPCOUNT"
-if [ "$CAPCOUNT" -ge 2 ]; then
-  echo "OK: capture symbols exported"
-else
-  echo "FAIL: capture symbols not exported"; exit 1
-fi
-
 # ---- FAudio ----
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- FNA3D (includes MojoShader) ----
@@ -107,6 +92,20 @@ NDK_CLANG="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
 ( cd "$TF" && make clean && make CC="$NDK_CLANG --target=aarch64-none-linux-android$API --sysroot=$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot -fPIC -O3" \
     CFLAGS="-fPIC -O3" LDFLAGS="-shared" lib )
 cp -f "$TF/libtheorafile.so" "$OUT/"
+echo "=== verifying FNA3D capture symbol exports ==="
+FNA3D_SO="$(find "$OUT" -name 'libFNA3D.so' 2>/dev/null | head -1)"
+echo "libFNA3D.so = $FNA3D_SO"
+if [ -z "$FNA3D_SO" ]; then
+  echo "FAIL: libFNA3D.so not found under $OUT"; exit 1
+fi
+"$NM" -D "$FNA3D_SO" 2>/dev/null | grep "DuckGame" || echo "(none in dynamic table)"
+CAPCOUNT=$( "$NM" -D "$FNA3D_SO" 2>/dev/null | grep -c "DuckGame" )
+echo "exported DuckGame symbol count = $CAPCOUNT"
+if [ "$CAPCOUNT" -ge 2 ]; then
+  echo "OK: capture symbols exported"
+else
+  echo "FAIL: capture symbols not exported"; exit 1
+fi
 
 echo "=== produced libs ==="
 ls -la "$OUT"
