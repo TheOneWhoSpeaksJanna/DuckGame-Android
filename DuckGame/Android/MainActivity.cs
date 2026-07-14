@@ -6,6 +6,12 @@ using Android.Content.PM;
 using Android.OS;
 using Android.Util;
 using Android.Views;
+using Android.Content.PM;
+
+[assembly: UsesPermission(Android.Manifest.Permission.Internet)]
+[assembly: UsesPermission(Android.Manifest.Permission.AccessNetworkState)]
+[assembly: UsesFeature("android.hardware.touchscreen", Required = false)]
+[assembly: UsesFeature("android.hardware.screen.landscape")]
 
 namespace DuckGame.Android
 {
