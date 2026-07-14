@@ -30,10 +30,10 @@ namespace DuckGame.Android
 
         public TouchGamepadView(Context context) : base(context)
         {
-            _paintFill = new Paint { Color = Android.Graphics.Color.Argb(90, 255, 255, 255) };
-            _paintStroke = new Paint { Color = Android.Graphics.Color.White, StrokeWidth = 3, AntiAlias = true };
+            _paintFill = new Paint { Color = global::Android.Graphics.Color.Argb(90, 255, 255, 255) };
+            _paintStroke = new Paint { Color = global::Android.Graphics.Color.White, StrokeWidth = 3, AntiAlias = true };
             _paintStroke.SetStyle(Paint.Style.Stroke);
-            _paintText = new Paint { Color = Android.Graphics.Color.White, TextSize = 38, AntiAlias = true, TextAlign = Paint.Align.Center };
+            _paintText = new Paint { Color = global::Android.Graphics.Color.White, TextSize = 38, AntiAlias = true, TextAlign = Paint.Align.Center };
         }
 
         protected override void OnSizeChanged(int w, int h, int oldw, int oldh)
@@ -74,8 +74,8 @@ namespace DuckGame.Android
             foreach (var p in _pads)
             {
                 _paintFill.Color = p.Down
-                    ? Android.Graphics.Color.Argb(160, 120, 200, 255)
-                    : Android.Graphics.Color.Argb(70, 255, 255, 255);
+                    ? global::Android.Graphics.Color.Argb(160, 120, 200, 255)
+                    : global::Android.Graphics.Color.Argb(70, 255, 255, 255);
                 canvas.DrawRoundRect(p.Bounds, 18, 18, _paintFill);
                 canvas.DrawRoundRect(p.Bounds, 18, 18, _paintStroke);
                 canvas.DrawText(p.Label, p.Bounds.CenterX(), p.Bounds.CenterY() + 12, _paintText);
@@ -85,22 +85,22 @@ namespace DuckGame.Android
 
         public override bool OnTouchEvent(MotionEvent e)
         {
-            MotionEventActions action = e.ActionMasked;
+            global::Android.Views.MotionEventActions action = e.ActionMasked;
             int idx = e.ActionIndex;
             float x = e.GetX(idx), y = e.GetY(idx);
             int pid = e.GetPointerId(idx);
 
             switch (action)
             {
-                case MotionEventActions.Down:
-                case MotionEventActions.PointerDown:
+                case global::Android.Views.MotionEventActions.Down:
+                case global::Android.Views.MotionEventActions.PointerDown:
                     Press(x, y, pid);
                     break;
-                case MotionEventActions.Up:
-                case MotionEventActions.PointerUp:
+                case global::Android.Views.MotionEventActions.Up:
+                case global::Android.Views.MotionEventActions.PointerUp:
                     Release(pid);
                     break;
-                case MotionEventActions.Move:
+                case global::Android.Views.MotionEventActions.Move:
                     if (_active.TryGetValue(pid, out var cur))
                     {
                         if (!cur.Bounds.Contains(x, y))
