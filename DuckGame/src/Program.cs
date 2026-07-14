@@ -1050,6 +1050,7 @@ namespace DuckGame
             catch { }
             Console.Error.WriteLine("[DUCKCRASH] EX: " + pException.GetType() + ": " + pException.Message);
             Console.Error.WriteLine("[DUCKCRASH] STACK: " + (pException.StackTrace ?? "<none>"));
+            Console.Error.WriteLine("[DUCKCRASH] ENVSTACK: " + Environment.StackTrace);
             if (pException.InnerException != null)
                 Console.Error.WriteLine("[DUCKCRASH] INNER: " + pException.InnerException.GetType() + ": " + pException.InnerException.Message + "\n" + (pException.InnerException.StackTrace ?? "<none>"));
             MonoMain.InvokeOnGameExitEvent(true);
