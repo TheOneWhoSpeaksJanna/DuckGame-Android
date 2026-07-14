@@ -104,19 +104,15 @@ s = s.replace(old, new)
 io.open(p, 'w', encoding='utf-8').write(s)
 print("OK: FNA3D GPU driver dropped from drivers[]")
 PY
-echo "=== patching FNA3D OpenGLES swap (diagnostic log) ==="
+echo "=== patching FNA3D OpenGL swap (diagnostic log) ==="
 python3 - "$FNA/FNA3D/src/FNA3D_Driver_OpenGL.c" <<'PY'
 import sys, io
 p = sys.argv[1]
 s = io.open(p, encoding='utf-8').read()
-# ensure android log header is available
 if '#include <android/log.h>' not in s:
     s = s.replace('#include <stdio.h>', '#include <stdio.h>\n#include <android/log.h>', 1)
 old = "static void OPENGL_SwapBuffers(\n"
-new = (
-    "static void OPENGL_SwapBuffers(\n"
-    "\t__android_log_print(ANDROID_LOG_INFO, \"DuckGame\", \"OPENGL_SwapBuffers ENTER\");\n"
-)
+new = "static void OPENGL_SwapBuffers(\n\t__android_log_print(ANDROID_LOG_INFO, \"DuckGame\", \"OPENGL_SwapBuffers ENTER\");\n"
 assert old in s, "OPENGL_SwapBuffers not found"
 s = s.replace(old, new, 1)
 io.open(p, 'w', encoding='utf-8').write(s)
