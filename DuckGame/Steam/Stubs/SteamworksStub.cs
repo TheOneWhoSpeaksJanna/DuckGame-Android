@@ -27,7 +27,6 @@ namespace Steamworks
     public enum ELeaderboardUploadScoreMethod { }
     public enum EGlobalStatType { }
     public enum ESteamItemFlags { }
-    public enum EUserUGCListSortOrder { }
 
     public struct CSteamID
     {
@@ -266,9 +265,10 @@ namespace Steamworks
 
     public class CallResult<T>
     {
-        public delegate void ResultDelegate(T result, bool ioFailure);
-        public CallResult(ResultDelegate d = null) { }
-        public void Set(SteamAPICall_t hAPICall, ResultDelegate d = null) { }
+        public delegate void APIDispatchDelegate(T result, bool ioFailure);
+        public static CallResult<T> Create(APIDispatchDelegate func) { return null; }
+        public CallResult(APIDispatchDelegate d = null) { }
+        public void Set(SteamAPICall_t hAPICall, APIDispatchDelegate d = null) { }
     }
 
     public class Callback<T>
