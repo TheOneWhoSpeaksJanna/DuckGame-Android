@@ -314,4 +314,37 @@ if "SDL_AndroidSetNativeWindowFromSurface" not in sym:
 else:
     print("SKIP: " + SYM + " (already patched)")
 
+# ---------------------------------------------------------------------------
+# 7. CMakeLists.txt : SDL_android.c is compiled WITH a precompiled header that
+#    was built under -fvisibility=hidden. That TU-level hidden visibility
+#    overrides our per-function visibility("default") attribute (the same
+#    reason a per-file -fvisibility=default flag crashes with "visibility
+#    differs in PCH file vs current file"). So for THIS file only, skip the
+#    PCH and compile with -fvisibility=default, letting our bridge symbols
+#    export (verified locally). SDL_android.c does not use the PCH types.
+# ---------------------------------------------------------------------------
+CMAKE = "CMakeLists.txt"
+with open(os.path.join(ROOT, CMAKE)) as f:
+    cm = f.read()
+if "SDL_android.c PROPERTIES SKIP_PRECOMPILE_HEADERS" not in cm:
+    anchor = """  if(HAVE_GCC_FVISIBILITY)
+    set_target_properties(SDL3-shared PROPERTIES
+      C_VISIBILITY_PRESET "hidden"
+      CXX_VISIBILITY_PRESET "hidden"
+      OBJC_VISIBILITY_PRESET "hidden"
+    )
+  endif()"""
+    assert anchor in cm, "CMakeLists.txt visibility anchor missing"
+    cm = cm.replace(anchor, anchor + """
+  # DuckGame-Android: export the native bridge symbols from SDL_android.c.
+  # Skip the PCH (built hidden) and force default visibility for this file.
+  set_source_files_properties(src/core/android/SDL_android.c PROPERTIES
+    SKIP_PRECOMPILE_HEADERS ON
+    COMPILE_OPTIONS "-fvisibility=default")""")
+    with open(os.path.join(ROOT, CMAKE), "w") as f:
+        f.write(cm)
+    print("OK: " + CMAKE)
+else:
+    print("SKIP: " + CMAKE + " (already patched)")
+
 print("All SDL3 Android patches applied.")
