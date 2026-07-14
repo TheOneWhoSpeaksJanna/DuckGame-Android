@@ -14,6 +14,10 @@
     <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <RunAotCompilation>false</RunAotCompilation>
+    <!-- Leave the BCL / System.Private.CoreLib untouched by the linker. The default
+         linker rewrites CoreLib metadata which can trigger a Mono TypeLoadException
+         in the assembly load hook on Android. None avoids that. -->
+    <AndroidLinkMode>None</AndroidLinkMode>
     <AndroidUseAapt2>true</AndroidUseAapt2>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <ApplicationId>com.duckgame.game</ApplicationId>
@@ -84,7 +88,11 @@
     <!-- The game's Steam wrapper (DGSteam) is compiled against an internal
          Steamworks stub (see Steam/Stubs), so no Steamworks.NET assembly is needed
          at runtime. Steam is non-functional on Android regardless. -->
-    <!-- Roslyn 4.8.0 (ModLoader compiles mods / XMLLevel) -->
+    <!-- Roslyn 4.8.0 — ModLoader compiles mods at runtime (ModLoader.cs uses
+         CSharpCompilation etc.). The using-namespace consumer (XMLLevel) is also
+         covered. These packages are required for the build; the linker is set to
+         None below so the BCL / System.Private.CoreLib is left untouched (avoids a
+         Mono TypeLoadException during the assembly load hook on Android). -->
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.8.0" />
