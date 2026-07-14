@@ -230,7 +230,12 @@ patch_file(
 
     // We're done!
     return true;""",
-    """    display = SDL_GetVideoDisplay(displayID);
+    """    /* DuckGame-Android: keep the native bridge symbols linked (they have no
+       other internal caller, so --gc-sections would otherwise drop them).
+       SDL_AndroidInitNative is a no-op; it just forces retention. */
+    SDL_AndroidInitNative();
+
+    display = SDL_GetVideoDisplay(displayID);
     display->natural_orientation = Android_JNI_GetDisplayNaturalOrientation();
     display->current_orientation = Android_JNI_GetDisplayCurrentOrientation();
     display->content_scale = Android_ScreenDensity;
