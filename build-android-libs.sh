@@ -84,15 +84,27 @@ fi
 # ---- FAudio ----
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- FNA3D (includes MojoShader) ----
-# Force ONLY the OpenGL FNA3D driver (no SDL3 GPU driver). The SDL3 GPU
-# driver presents a swapchain texture and never calls SDL_GL_SwapWindow,
-# which is where our readback-blit capture hook lives. The OpenGL driver
-# calls SDL_GL_SwapWindow -> Android_GLES_SwapWindow, so capture works.
-# OpenGL also runs fine on real devices.
-# We keep USE_SDL3 defined via CFLAGS (so MojoShader includes
-# <SDL3/SDL_assert.h> and finds the SDL3 headers) but turn BUILD_SDL3
-# OFF to drop the GPU driver from the build.
-build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DBUILD_SDL3=OFF -DCMAKE_C_FLAGS=-DUSE_SDL3 -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
+# Keep BUILD_SDL3=ON so FNA3D links against libSDL3.so (MojoShader
+# and the OpenGL driver need SDL3 symbols). We then PATCH the driver
+# table in FNA3D.c to drop the SDL3 GPU driver (SDLGPUDriver) so the
+# OpenGL driver is the only GL backend. The SDL3 GPU driver presents a
+# swapchain texture and never calls SDL_GL_SwapWindow, which is where our
+# readback-blit capture hook lives. With only the OpenGL driver, every
+# present goes through SDL_GL_SwapWindow -> Android_GLES_SwapWindow,
+# so the capture fires. OpenGL also works fine on real devices.
+echo "=== patching FNA3D driver table (drop SDL3 GPU driver) ==="
+python3 - "$FNA/FNA3D/src/FNA3D.c" <<'PY'
+import sys, io
+p = sys.argv[1]
+s = io.open(p, encoding='utf-8').read()
+old = "\t&SDLGPUDriver,\n"
+new = "\t/*DuckGame-Android: OpenGL-only; GPU driver dropped so the EGL readback path is used*/&SDLGPUDriver,\n"
+assert old in s, "FNA3D driver table line not found: "+repr(old)
+s = s.replace(old, new)
+io.open(p, 'w', encoding='utf-8').write(s)
+print("OK: FNA3D GPU driver dropped from drivers[]")
+PY
+build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DBUILD_SDL3=ON -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- Theorafile (Makefile-based; bundle ogg/theora/vorbis) ----
 echo "=== building theorafile (Makefile) ==="
 TF="$FNA/Theorafile"
