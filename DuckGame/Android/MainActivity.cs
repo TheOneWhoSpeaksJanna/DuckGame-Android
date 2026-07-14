@@ -110,21 +110,32 @@ namespace DuckGame.Android
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
             _surfaceView.Holder.AddCallback(this);
 
-            // On-screen touch gamepad, layered ABOVE the SurfaceView via its own
-            // window so buttons stay visible while FNA renders underneath.
+            // On-screen touch gamepad. Try to float it above the (on-top)
+            // SurfaceView via its own WindowManager overlay; if that isn't
+            // permitted (e.g. SYSTEM_ALERT_WINDOW not granted), fall back to a
+            // normal content view so the controls still exist.
             _gamepad = new TouchGamepadView(this);
             _gamepad.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
-            var lp = new WindowManagerLayoutParams(
-                ViewGroup.LayoutParams.MatchParent,
-                ViewGroup.LayoutParams.MatchParent,
-                WindowManagerTypes.ApplicationOverlay,
-                WindowManagerFlags.NotFocusable | WindowManagerFlags.LayoutInScreen,
-                global::Android.Graphics.Format.Translucent)
+            try
             {
-                Gravity = GravityFlags.Fill
-            };
-            var wm = GetSystemService(WindowService).JavaCast<IWindowManager>();
-            wm.AddView(_gamepad, lp);
+                var lp = new WindowManagerLayoutParams(
+                    ViewGroup.LayoutParams.MatchParent,
+                    ViewGroup.LayoutParams.MatchParent,
+                    WindowManagerTypes.ApplicationOverlay,
+                    WindowManagerFlags.NotFocusable | WindowManagerFlags.LayoutInScreen,
+                    global::Android.Graphics.Format.Translucent)
+                {
+                    Gravity = GravityFlags.Fill
+                };
+                var wm = GetSystemService(WindowService).JavaCast<IWindowManager>();
+                wm.AddView(_gamepad, lp);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("DuckGame", "Touch overlay window failed, using content view: " + ex.Message);
+                AddContentView(_gamepad, new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            }
 
             // Run the real game loop on a background thread; the main (UI) thread
             // stays free so the surface callback can fire and hand SDL the window.
