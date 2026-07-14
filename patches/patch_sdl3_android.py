@@ -369,7 +369,6 @@ patch_file(
     (void)SDL_AndroidSetNativeWindow;
     (void)SDL_AndroidSetNativeWindowFromSurface;
     (void)SDL_AndroidSetScreenResolution;
-    (void)SDL_AndroidSetJavaVM;
 
     return JNI_VERSION_1_4;
 }
