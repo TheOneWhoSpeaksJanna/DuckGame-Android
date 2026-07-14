@@ -72,12 +72,6 @@ namespace DuckGame.Android
             base.OnCreate(savedInstanceState);
             RequestWindowFeature(WindowFeatures.NoTitle);
 
-            // Make the activity window fully transparent so the SurfaceView's
-            // hardware layer (where FNA/SDL renders) shows through. An opaque
-            // window background would composite over the SurfaceView and show
-            // only black even though EGL SwapBuffers succeeds.
-            Window.SetBackgroundDrawable(new global::Android.Graphics.Drawables.ColorDrawable(global::Android.Graphics.Color.Transparent));
-
             // Hide the Android status + navigation bars (immersive sticky) and let the
             // game ignore the notch / display cutout (render full-bleed).
             if (Build.VERSION.SdkInt >= BuildVersionCodes.Kitkat)
@@ -104,8 +98,17 @@ namespace DuckGame.Android
             }
 
             // SurfaceView: Android's UI toolkit that owns an ANativeWindow we can
-            // hand to SDL. It sits behind the transparent touch-gamepad overlay.
+            // hand to SDL. Make it the top-most surface so the FNA/SDL EGL
+            // surface composites in front of the window background (otherwise the
+            // opaque/transparent window draws over it and we see black). The touch
+            // gamepad is then layered on top of the SurfaceView.
             _surfaceView = new SurfaceView(this);
+            // Place this SurfaceView's surface ABOVE the window background but
+            // BELOW the normal app views (the touch overlay), so FNA/SDL's EGL
+            // render shows through instead of the window's black/transparent
+            // fill, while the on-screen buttons stay visible on top.
+            _surfaceView.SetZOrderMediaOverlay(true);
+            _surfaceView.Holder.SetFormat(Android.Graphics.Format.Opaque);
             AddContentView(_surfaceView, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
             _surfaceView.Holder.AddCallback(this);
@@ -133,10 +136,9 @@ namespace DuckGame.Android
             _surfaceReady.WaitOne();
             try
             {
-                // DIAGNOSTIC: force the Android video driver and verbose SDL
-                // logging so we can see exactly which EGL path FNA takes.
+                // Force SDL's Android video driver (FNA's desktop path might
+                // otherwise pick a non-Android driver on .NET Android).
                 SDL.SDL_SetHint("SDL_VIDEODRIVER", "android");
-                SDL.SDL_SetHint("SDL_LOGGING", "verbose");
                 global::DuckGame.Program.Main(new string[0]);
             }
             catch (Exception ex)
