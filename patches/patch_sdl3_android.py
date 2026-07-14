@@ -159,15 +159,9 @@ BRIDGE = """bool Android_JNI_IsReady(void)
 __attribute__((visibility("default"), used))
 void SDL_AndroidInitNative(void)
 {
-    /* DuckGame-Android: ensure we have the ART JavaVM. JNI_OnLoad normally
-       sets mJavaVM, but acquire it defensively from the running runtime. */
-    if (!mJavaVM) {
-        JavaVM *vm = NULL;
-        int n = 0;
-        if (JNI_GetCreatedJavaVMs(&vm, 1, &n) == 0 && n > 0 && vm) {
-            mJavaVM = vm;
-        }
-    }
+    /* mJavaVM is already captured by SDL3's JNI_OnLoad when .NET Android
+       dlopen()s libSDL3.so, so there is nothing to do here. Kept as an
+       explicit entry point the host can call before SDL_Init(VIDEO). */
 }
 
 __attribute__((visibility("default"), used))
