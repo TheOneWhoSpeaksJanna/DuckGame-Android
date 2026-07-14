@@ -29,6 +29,9 @@
 
   <!-- Compile the real game source verbatim; exclude only true duplicates / peripheral glue -->
   <ItemGroup>
+    <!-- Exclude the Steam wrapper's own source tree: it is compiled by the separate
+         Steam.Android.csproj (referenced via ProjectReference), not the main project. -->
+    <Compile Remove="Steam/**/*.cs" />
     <!-- Root DiscordRichPresence.cs is an INCOMPLETE duplicate; the full class
          (with noRPC / whenGameStarted) lives in AddedContent/klof44. Keep that one. -->
     <Compile Remove="src/DiscordRichPresence.cs" />
