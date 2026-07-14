@@ -64,7 +64,7 @@ namespace DuckGame.Android
         // AAssetManager used to read game files from the APK. .NET's dlopen
         // never runs SDL's JNI_OnLoad, so mJavaVM would otherwise stay NULL.
         [DllImport("libSDL3.so")]
-        private static extern void SDL_AndroidSetJavaVM(IntPtr vm, IntPtr context);
+        private static extern void SDL_AndroidSetJavaVM(IntPtr env, IntPtr context);
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -141,11 +141,10 @@ namespace DuckGame.Android
             {
                 IntPtr env = global::Android.Runtime.JNIEnv.Handle;
                 IntPtr surface = global::Android.Runtime.JNIEnv.ToJniHandle(holder.Surface);
-                // Hand SDL the real JavaVM* + Context so it can build the
+                // Hand SDL a JNIEnv* + the Activity Context so it can build the
                 // AAssetManager (used to read game files from the APK).
-                IntPtr vm = global::Android.Runtime.JavaVM.Handle;
                 IntPtr ctx = global::Android.Runtime.JNIEnv.ToJniHandle(this);
-                SDL_AndroidSetJavaVM(vm, ctx);
+                SDL_AndroidSetJavaVM(env, ctx);
                 // SDL (patched) converts the Surface to an ANativeWindow.
                 SDL_AndroidSetNativeWindowFromSurface(env, surface);
 

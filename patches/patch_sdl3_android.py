@@ -418,14 +418,14 @@ BRIDGE2 = r'''
    to grab the AAssetManager and then detach, leaving mJavaVM NULL so all the
    other activity-JNI paths stay guarded + no-op. */
 __attribute__((visibility("default"), used))
-void SDL_AndroidSetJavaVM(void *vm, void *context)
+void SDL_AndroidSetJavaVM(void *envptr, void *context)
 {
-    if (!vm || !context) {
+    if (!envptr || !context) {
         return;
     }
-    JavaVM *javaVM = (JavaVM *)vm;
-    JNIEnv *env = NULL;
-    if ((*javaVM)->AttachCurrentThread(javaVM, &env, NULL) < 0 || !env) {
+    JNIEnv *env = (JNIEnv *)envptr;
+    JavaVM *javaVM = NULL;
+    if ((*env)->GetJavaVM(env, &javaVM) < 0 || !javaVM) {
         return;
     }
     jobject assets = (*env)->CallObjectMethod(env, (jobject)context,
@@ -435,7 +435,6 @@ void SDL_AndroidSetJavaVM(void *vm, void *context)
         javaAssetManagerRef = (*env)->NewGlobalRef(env, assets);
         asset_manager = AAssetManager_fromJava(env, javaAssetManagerRef);
     }
-    (*javaVM)->DetachCurrentThread(javaVM);
 }
 '''
 patch_file(
