@@ -14,14 +14,12 @@
     <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <RunAotCompilation>false</RunAotCompilation>
-    <!-- NOTE: do NOT set AndroidLinkMode=None. The default SdkOnly linker is what
-         swaps the Microsoft.NETCore.App *reference* System.Private.CoreLib for the
-         runtime implementation. With None, the ref CoreLib (no IL) gets bundled and
-         Mono aborts on load (TypeLoadException in the assembly load hook). -->
-    <!-- Pin the BCL to the exact Microsoft.NETCore.App build the Android workload's
-         Mono runtime expects (8.0.28). Achieved by installing the latest .NET 8 SDK
-         (which ships Microsoft.NETCore.App.Ref 8.0.28) in the CI workflow, so the
-         app's CoreLib matches the workload's Mono runtime CoreLib. -->
+    <!-- Keep the DEFAULT (SdkOnly) linker: it is what swaps the Microsoft.NETCore.App
+         *reference* System.Private.CoreLib for the runtime implementation. Do NOT set
+         AndroidLinkMode=None (that bundles the ref CoreLib with no IL -> Mono aborts). -->
+    <!-- Steamworks.NET NuGet is referenced here ONLY to pin Microsoft.NETCore.App to
+         8.0.28 (matching the Android workload's Mono runtime CoreLib). DGSteam.dll uses
+         the internal Steamworks stub, so Steamworks.NET.dll is bundled but never loaded. -->
     <AndroidUseAapt2>true</AndroidUseAapt2>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <ApplicationId>com.duckgame.game</ApplicationId>
@@ -78,9 +76,10 @@
 
   <!-- NuGet dependencies (multi-target netstandard2.0/net8) -->
   <ItemGroup>
-    <!-- Steamworks.NET is NOT referenced here: DGSteam.dll uses the internal
-         Steamworks stub (Steam/Stubs), which avoids bundling Steamworks.NET's
-         reference assembly (XA0107) and the invalid-CIL runtime load failure. -->
+    <!-- Steamworks.NET: provides the Microsoft.NETCore.App 8.0.28 dependency that
+         pins the bundled CoreLib to match the Android workload's Mono runtime.
+         DGSteam uses the internal stub, so this dll is bundled but not loaded. -->
+    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0" />
