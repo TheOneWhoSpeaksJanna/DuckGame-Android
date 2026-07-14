@@ -8,6 +8,7 @@
     <AssemblyName>DuckGame</AssemblyName>
     <RootNamespace>DuckGame</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <!-- Android packaging -->
     <AndroidPackageFormats>apk</AndroidPackageFormats>
     <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>

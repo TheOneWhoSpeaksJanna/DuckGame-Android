@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Original stubbed Steamworks.NET the game was built against (avoids native steam_api dep) -->
-    <Reference Include="Steamworks.NET"><HintPath>..\lib\Steamworks.NET.dll</HintPath></Reference>
+    <!-- Real Steamworks.NET: provides the full Steamworks.* API the wrapper uses -->
+    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
   </ItemGroup>
 </Project>
