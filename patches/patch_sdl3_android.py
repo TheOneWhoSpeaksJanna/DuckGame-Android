@@ -464,4 +464,124 @@ for static_line in [
 ]:
     patch_file(ANDROID_C, static_line, STORAGE_GUARD + static_line)
 
+# ---------------------------------------------------------------------------
+# 12. DuckGame-Android readback-blit path (for emulators like redroid whose
+#     software compositor cannot present the SDL SurfaceView hardware layer).
+#     When the host calls SDL_DuckGameSetCapture(1), after each GL swap we
+#     read the backbuffer into a shared RGBA buffer. The managed host then
+#     blits that buffer onto a normal Canvas View (which the compositor CAN
+#     show). On real devices capture stays OFF, so the native SurfaceView path
+#     is used unchanged. We use SDL_GL_ReadPixels (context is current here).
+# ---------------------------------------------------------------------------
+GLES_C = "src/video/android/SDL_androidgl.c"
+
+# 12a. globals + bridge entry points near the top of the file.
+patch_file(
+    GLES_C,
+    "#include <dlfcn.h>\n",
+    """#include <dlfcn.h>
+
+/* DuckGame-Android: optional readback-blit capture (see module docs). When
+   g_DuckGameCapture is set, Android_GLES_SwapWindow reads the backbuffer into
+   a malloc'd RGBA buffer the managed host can blit onto a Canvas View. */
+static int g_DuckGameCapture = 0;
+static unsigned char *g_DuckGamePixels = NULL;
+static int g_DuckGamePixW = 0;
+static int g_DuckGamePixH = 0;
+
+__attribute__((visibility("default"), used))
+void SDL_DuckGameSetCapture(int enabled)
+{
+    g_DuckGameCapture = enabled;
+}
+
+__attribute__((visibility("default"), used))
+int SDL_DuckGameLockPixels(int *w, int *h, unsigned char **pixels)
+{
+    if (!g_DuckGameCapture || !g_DuckGamePixels) return 0;
+    *w = g_DuckGamePixW;
+    *h = g_DuckGamePixH;
+    *pixels = g_DuckGamePixels;
+    return 1;
+}
+""",
+)
+
+# 12b. read the backbuffer into the shared buffer just BEFORE the swap.
+patch_file(
+    GLES_C,
+    """    result = SDL_EGL_SwapBuffers(_this, window->internal->egl_surface);
+
+    Android_UnlockActivityMutex();
+
+    return result;
+}
+""",
+    """    /* DuckGame-Android: capture the backbuffer for the readback-blit path. */
+    if (g_DuckGameCapture) {
+        int w = window->w;
+        int h = window->h;
+        if (w > 0 && h > 0) {
+            int need = w * h * 4;
+            if (!g_DuckGamePixels || g_DuckGamePixW != w || g_DuckGamePixH != h) {
+                if (g_DuckGamePixels) SDL_free(g_DuckGamePixels);
+                g_DuckGamePixels = (unsigned char *)SDL_malloc(need);
+                g_DuckGamePixW = w;
+                g_DuckGamePixH = h;
+            }
+            if (g_DuckGamePixels) {
+                SDL_GL_ReadPixels(0, 0, w, h, 0x1908 /*RGBA*/, 0x1401 /*UNSIGNED_BYTE*/, g_DuckGamePixels);
+            }
+        }
+    }
+
+    result = SDL_EGL_SwapBuffers(_this, window->internal->egl_surface);
+
+    Android_UnlockActivityMutex();
+
+    return result;
+}
+""",
+)
+
+# 12c. export the new symbols.
+SYM2 = "src/dynapi/SDL_dynapi.sym"
+with open(os.path.join(ROOT, SYM2)) as f:
+    sym2 = f.read()
+if "SDL_DuckGameSetCapture" not in sym2:
+    marker2 = "    # extra symbols go here (don't modify this line)\n"
+    assert marker2 in sym2, "SDL_dynapi.sym marker missing (2)"
+    extra2 = (
+        "    SDL_DuckGameSetCapture;\n"
+        "    SDL_DuckGameLockPixels;\n"
+        + marker2
+    )
+    sym2 = sym2.replace(marker2, extra2)
+    with open(os.path.join(ROOT, SYM2), "w") as f:
+        f.write(sym2)
+    print("OK: " + SYM2 + " (capture symbols)")
+else:
+    print("SKIP: " + SYM2 + " (capture symbols already present)")
+
+# 12d. ensure SDL_androidgl.c exports its visibility("default") symbols even
+#     though the TU is built with -fvisibility=hidden + a PCH. Mirror the
+#     SDL_android.c treatment: skip the PCH and force default visibility.
+CMAKE2 = "CMakeLists.txt"
+with open(os.path.join(ROOT, CMAKE2)) as f:
+    cm2 = f.read()
+if "src/video/android/SDL_androidgl.c PROPERTIES SKIP_PRECOMPILE_HEADERS" not in cm2:
+    anchor2 = "  # DuckGame-Android: export the native bridge symbols from SDL_android.c.\n"
+    assert anchor2 in cm2, "CMakeLists.txt DuckGame anchor missing"
+    cm2 = cm2.replace(anchor2, anchor2 + """  # DuckGame-Android: same for SDL_androidgl.c (readback-blit capture symbols).
+  set_source_files_properties(src/video/android/SDL_androidgl.c PROPERTIES
+    SKIP_PRECOMPILE_HEADERS ON
+    COMPILE_OPTIONS "-fvisibility=default")
+""")
+    with open(os.path.join(ROOT, CMAKE2), "w") as f:
+        f.write(cm2)
+    print("OK: " + CMAKE2 + " (SDL_androidgl.c visibility)")
+else:
+    print("SKIP: " + CMAKE2 + " (SDL_androidgl.c visibility already set)")
+
 print("All SDL3 Android patches applied.")
+

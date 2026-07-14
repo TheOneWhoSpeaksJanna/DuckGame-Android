@@ -43,7 +43,23 @@ namespace DuckGame.Android
     {
         private TouchGamepadView _gamepad;
         private SurfaceView _surfaceView;
+        private BlitView _blitView;
+        private Thread _blitThread;
+        private volatile bool _blitRunning;
         private readonly ManualResetEvent _surfaceReady = new ManualResetEvent(false);
+
+        // redroid is detected at runtime; on it we use the readback-blit path
+        // (Canvas View) because its software compositor can't show the SDL
+        // SurfaceView hardware layer. Real devices keep the native path.
+        private static bool IsRedroid()
+        {
+            try
+            {
+                var v = global::Android.OS.Build.Model + " " + global::Android.OS.Build.Product;
+                return v.IndexOf("redroid", StringComparison.OrdinalIgnoreCase) >= 0;
+            }
+            catch { return false; }
+        }
 
         // --- Patched SDL3 Android bridge (exported from libSDL3.so) ---
         [DllImport("libSDL3.so")]
@@ -69,6 +85,17 @@ namespace DuckGame.Android
         // never runs SDL's JNI_OnLoad, so mJavaVM would otherwise stay NULL.
         [DllImport("libSDL3.so")]
         private static extern void SDL_AndroidSetJavaVM(IntPtr env, IntPtr context);
+
+        // DuckGame-Android readback-blit bridge (see patch_sdl3_android.py step 12).
+        // On emulators (redroid) whose software compositor can't present the
+        // SurfaceView hardware layer, we capture the EGL backbuffer here and
+        // blit it onto a normal Canvas View (which composites fine). On real
+        // devices these stay disabled and the native SurfaceView is used.
+        [DllImport("libSDL3.so")]
+        private static extern void SDL_DuckGameSetCapture(int enabled);
+
+        [DllImport("libSDL3.so")]
+        private static extern int SDL_DuckGameLockPixels(out int w, out int h, out IntPtr pixels);
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -106,6 +133,19 @@ namespace DuckGame.Android
             AddContentView(_surfaceView, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
             _surfaceView.Holder.AddCallback(this);
+
+            // On redroid (software compositor can't present the SDL SurfaceView
+            // layer), add a Canvas-based BlitView on top that mirrors the
+            // captured backbuffer so the game is actually visible. On real
+            // devices this is skipped and the SurfaceView is shown natively.
+            bool redroid = IsRedroid();
+            if (redroid)
+            {
+                _blitView = new BlitView(this);
+                AddContentView(_blitView, new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+                try { SDL_DuckGameSetCapture(1); } catch (Exception ex) { Log.Warn("DuckGame", "capture set failed: " + ex.Message); }
+            }
 
             // On-screen touch gamepad. Try to float it above the SurfaceView via
             // its own WindowManager overlay (needs SYSTEM_ALERT_WINDOW); if that
@@ -154,11 +194,48 @@ namespace DuckGame.Android
                 // Force SDL's Android video driver (FNA's desktop path might
                 // otherwise pick a non-Android driver on .NET Android).
                 SDL.SDL_SetHint("SDL_VIDEODRIVER", "android");
+
+                // Start the readback-blit pump (redroid only). It reads the
+                // captured backbuffer and draws it onto the Canvas BlitView.
+                if (_blitView != null)
+                {
+                    _blitRunning = true;
+                    _blitThread = new Thread(BlitLoop) { Name = "DuckGameBlit", IsBackground = true };
+                    _blitThread.Start();
+                }
+
                 global::DuckGame.Program.Main(new string[0]);
             }
             catch (Exception ex)
             {
                 Log.Error("DuckGame", "Game loop exited: " + ex);
+            }
+            finally
+            {
+                _blitRunning = false;
+            }
+        }
+
+        // Pumps the captured EGL backbuffer onto the BlitView (Canvas) so the
+        // game is visible on redroid. No-op on real devices (no _blitView).
+        private void BlitLoop()
+        {
+            while (_blitRunning && _blitView != null)
+            {
+                try
+                {
+                    int w, h; IntPtr px;
+                    if (SDL_DuckGameLockPixels(out w, out h, out px) != 0 && w > 0 && h > 0 && px != IntPtr.Zero)
+                    {
+                        _blitView.PushFrame(w, h, px);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn("DuckGame", "blit: " + ex.Message);
+                }
+                // ~30fps mirror; cheap relative to game render.
+                Thread.Sleep(33);
             }
         }
 
