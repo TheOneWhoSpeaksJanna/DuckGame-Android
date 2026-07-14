@@ -20,6 +20,7 @@ build_cmake() {
   ( cd "$b" && cmake -GNinja \
       -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
       -DANDROID_ABI="$ABI" -DANDROID_PLATFORM=android-$API \
+      -DCMAKE_INCLUDE_PATH="$SDL3_INCLUDE_DIR" \
       -DCMAKE_BUILD_TYPE=Release $extra "$src" \
       && cmake --build . -j"$(nproc 2>/dev/null || echo 4)" )
   find "$b" -name "*.so" -exec cp {} "$OUT/" \;
