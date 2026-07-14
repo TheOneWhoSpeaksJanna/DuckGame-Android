@@ -148,7 +148,7 @@ namespace DuckGame.Android
                     ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
                 try
                 {
-                    SDL_DuckGameSetCapture(1);
+                    DuckGame_SetCapture(1);
                     Log.Info("DuckGame", "redroid: readback-blit capture ENABLED");
                 }
                 catch (Exception ex) { Log.Warn("DuckGame", "capture set failed: " + ex.Message); }
