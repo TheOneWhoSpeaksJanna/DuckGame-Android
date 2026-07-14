@@ -130,8 +130,8 @@ namespace DuckGame.Android
         {
             try
             {
-                IntPtr env = JNIEnv.Handle;
-                IntPtr surface = JNIEnv.ToJniHandle(holder.Surface);
+                IntPtr env = global::Android.Runtime.JNIEnv.Handle;
+                IntPtr surface = global::Android.Runtime.JNIEnv.ToJniHandle(holder.Surface);
                 IntPtr nativeWindow = ANativeWindow_fromSurface(env, surface);
 
                 // Make SDL's Android driver ready (acquire JavaVM) and give it the
@@ -157,8 +157,8 @@ namespace DuckGame.Android
         {
             try
             {
-                IntPtr env = JNIEnv.Handle;
-                IntPtr surface = JNIEnv.ToJniHandle(holder.Surface);
+                IntPtr env = global::Android.Runtime.JNIEnv.Handle;
+                IntPtr surface = global::Android.Runtime.JNIEnv.ToJniHandle(holder.Surface);
                 IntPtr nativeWindow = ANativeWindow_fromSurface(env, surface);
                 SDL_AndroidSetNativeWindow(nativeWindow);
                 SDL_AndroidSetScreenResolution(width, height, width, height,
