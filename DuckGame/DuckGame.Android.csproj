@@ -22,26 +22,17 @@
     <TargetAndroidApiLevel>34</TargetAndroidApiLevel>
     <EnableDefaultItems>true</EnableDefaultItems>
     <ManagePackageReferencesCentrally>false</ManagePackageReferencesCentrally>
-    <DefineConstants>$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
-  <!-- Compile the real game source verbatim; exclude only Windows-only files -->
+  <!-- Compile the real game source verbatim; exclude only true duplicates / peripheral glue -->
   <ItemGroup>
-    <Compile Remove="src/WindowsPlatformStartup.cs" />
-    <Compile Remove="src/MonoTime/Modding/ModLoader/ModLoader.cs" />
-    <Compile Remove="src/MonoTime/File/RtfWriter.cs" />
-    <Compile Remove="src/XnaToFna/GameFormForWinForms.cs" />
-    <Compile Remove="src/DuckGame/Network/NMKillDuck.cs" />
-    <Compile Remove="src/OnOutputDebugStringHandler.cs" />
-    <Compile Remove="src/DebugMonitor.cs" />
-    <Compile Remove="src/DiscordRichPresence.cs" />
-    <Compile Remove="src/MonoTime/Console/Commands/DansTestArea.cs" />
     <!-- Duplicate of src/XnaToFna/ConnectionIndicator.cs (identical) -->
     <Compile Remove="src/XnaToFna/ModCompatibility/ConnectionIndicator.cs" />
     <!-- Root AssemblyInfo duplicates the SDK-generated one and uses removed SecurityPermission -->
     <Compile Remove="AssemblyInfo.cs" />
-    <!-- Peripheral Windows-only / external-dependency glue that cannot compile on Android -->
+    <!-- Peripheral Discord glue (AddedContent) that cannot run on Android without Discord client -->
     <Compile Remove="AddedContent/klof44/DiscordRichPresence.cs" />
+    <!-- Harmony (0Harmony) mod-loading glue referencing Windows-only hooks -->
     <Compile Remove="src/XnaToFna/ModCompatibility/ExtraStuff2Replacements.cs" />
     <Compile Remove="Properties/Settings.Designer.cs" />
     <Compile Remove="Properties/Settings.settings" />
@@ -59,8 +50,8 @@
     <Reference Include="Mono.Cecil"><HintPath>lib\Mono.Cecil.dll</HintPath></Reference>
     <Reference Include="Mono.Cecil.Mdb"><HintPath>lib\Mono.Cecil.Mdb.dll</HintPath></Reference>
     <Reference Include="Mono.Cecil.Pdb"><HintPath>lib\Mono.Cecil.Pdb.dll</HintPath></Reference>
+    <!-- MonoMod.exe is the full MonoMod (includes MonoMod.Utils). Do NOT also add MonoMod.Utils.dll (duplicate MonoModExt). -->
     <Reference Include="MonoMod"><HintPath>lib\MonoMod.exe</HintPath></Reference>
-    <Reference Include="MonoMod.Utils"><HintPath>lib\MonoMod.Utils.dll</HintPath></Reference>
     <Reference Include="NAudio"><HintPath>lib\NAudio.dll</HintPath></Reference>
     <Reference Include="NVorbis.NAudioSupport"><HintPath>lib\NVorbis.NAudioSupport.dll</HintPath></Reference>
     <Reference Include="0Harmony"><HintPath>lib\0Harmony.dll</HintPath></Reference>
@@ -80,6 +71,14 @@
     <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
+    <PackageReference Include="System.CodeDom" Version="8.0.0" />
+    <!-- Roslyn 4.8.0 (ModLoader compiles mods / XMLLevel) -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="4.8.0" />
+    <!-- Discord rich presence (DiscordRPC.dll) -->
+    <PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
   </ItemGroup>
 
   <!-- Bundle game content + assets into the APK -->

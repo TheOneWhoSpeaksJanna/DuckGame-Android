@@ -1,9 +1,7 @@
 using System;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using SDL3;
 
-namespace DuckGame.Android
+namespace DuckGame.AndroidHost
 {
     /// <summary>
     /// Bridges on-screen touch buttons to the real Duck Game by injecting genuine
@@ -38,16 +36,16 @@ namespace DuckGame.Android
                     which = 1,
                     scancode = SDL.SDL_GetScancodeFromKey((uint)key, IntPtr.Zero),
                     key = (uint)key,
-                    mod = 0,
+                    mod = SDL.SDL_Keymod.SDL_KMOD_NONE,
                     raw = 0,
-                    down = (type == SDL.SDL_EventType.SDL_EVENT_KEY_DOWN) ? SDL.SDLBool.True : SDL.SDLBool.False,
-                    repeat = SDL.SDLBool.False
+                    down = (type == SDL.SDL_EventType.SDL_EVENT_KEY_DOWN),
+                    repeat = false
                 };
                 SDL.SDL_PushEvent(ref evt);
             }
             catch (Exception ex)
             {
-                Android.Util.Log.Error("DuckGame", "SDL inject failed: " + ex);
+                global::Android.Util.Log.Error("DuckGame", "SDL inject failed: " + ex);
             }
         }
 

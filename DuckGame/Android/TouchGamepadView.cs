@@ -5,7 +5,7 @@ using Android.Graphics;
 using Android.Views;
 using SDL3;
 
-namespace DuckGame.Android
+namespace DuckGame.AndroidHost
 {
     /// <summary>
     /// Transparent on-screen gamepad drawn over the SDL surface. Touching a button
@@ -30,10 +30,10 @@ namespace DuckGame.Android
 
         public TouchGamepadView(Context context) : base(context)
         {
-            _paintFill = new Paint { Alpha = 90, Color = Color.Argb(90, 255, 255, 255) };
-            _paintStroke = new Paint { Color = Color.White, StrokeWidth = 3, AntiAlias = true };
+            _paintFill = new Paint { Color = Android.Graphics.Color.Argb(90, 255, 255, 255) };
+            _paintStroke = new Paint { Color = Android.Graphics.Color.White, StrokeWidth = 3, AntiAlias = true };
             _paintStroke.SetStyle(Paint.Style.Stroke);
-            _paintText = new Paint { Color = Color.White, TextSize = 38, AntiAlias = true, TextAlign = Paint.Align.Center };
+            _paintText = new Paint { Color = Android.Graphics.Color.White, TextSize = 38, AntiAlias = true, TextAlign = Paint.Align.Center };
         }
 
         protected override void OnSizeChanged(int w, int h, int oldw, int oldh)
@@ -51,10 +51,10 @@ namespace DuckGame.Android
             int baseY = _h - d * 2 - pad;
             int leftX = pad;
             // D-pad (left side)
-            _pads.Add(new Pad { Bounds = new RectF(leftX, baseY - d, leftX + d, baseY), Key = SdlKeyboardInjector.Map.Up, Label = "▲" });
-            _pads.Add(new Pad { Bounds = new RectF(leftX, baseY + d, leftX + d, baseY + 2 * d), Key = SdlKeyboardInjector.Map.Down, Label = "▼" });
-            _pads.Add(new Pad { Bounds = new RectF(leftX - d, baseY, leftX, baseY + d), Key = SdlKeyboardInjector.Map.Left, Label = "◀" });
-            _pads.Add(new Pad { Bounds = new RectF(leftX + d, baseY, leftX + 2 * d, baseY + d), Key = SdlKeyboardInjector.Map.Right, Label = "▶" });
+            _pads.Add(new Pad { Bounds = new RectF(leftX, baseY - d, leftX + d, baseY), Key = SdlKeyboardInjector.Map.Up, Label = "\u25B2" });
+            _pads.Add(new Pad { Bounds = new RectF(leftX, baseY + d, leftX + d, baseY + 2 * d), Key = SdlKeyboardInjector.Map.Down, Label = "\u25BC" });
+            _pads.Add(new Pad { Bounds = new RectF(leftX - d, baseY, leftX, baseY + d), Key = SdlKeyboardInjector.Map.Left, Label = "\u25C0" });
+            _pads.Add(new Pad { Bounds = new RectF(leftX + d, baseY, leftX + 2 * d, baseY + d), Key = SdlKeyboardInjector.Map.Right, Label = "\u25B6" });
             // Action buttons (right side)
             int rx = _w - d - pad;
             int by = baseY;
@@ -64,7 +64,7 @@ namespace DuckGame.Android
             // Top-right: start / back
             int tx = _w - d - pad;
             int ty = pad;
-            _pads.Add(new Pad { Bounds = new RectF(tx, ty, tx + d, ty + d), Key = SdlKeyboardInjector.Map.Start, Label = "⏎" });
+            _pads.Add(new Pad { Bounds = new RectF(tx, ty, tx + d, ty + d), Key = SdlKeyboardInjector.Map.Start, Label = "\u23CE" });
             _pads.Add(new Pad { Bounds = new RectF(tx - d - pad, ty, tx - pad, ty + d), Key = SdlKeyboardInjector.Map.Back, Label = "ESC" });
         }
 
@@ -73,7 +73,9 @@ namespace DuckGame.Android
             base.OnDraw(canvas);
             foreach (var p in _pads)
             {
-                _paintFill.Color = p.Down ? Color.Argb(160, 120, 200, 255) : Color.Argb(70, 255, 255, 255);
+                _paintFill.Color = p.Down
+                    ? Android.Graphics.Color.Argb(160, 120, 200, 255)
+                    : Android.Graphics.Color.Argb(70, 255, 255, 255);
                 canvas.DrawRoundRect(p.Bounds, 18, 18, _paintFill);
                 canvas.DrawRoundRect(p.Bounds, 18, 18, _paintStroke);
                 canvas.DrawText(p.Label, p.Bounds.CenterX(), p.Bounds.CenterY() + 12, _paintText);
@@ -83,7 +85,7 @@ namespace DuckGame.Android
 
         public override bool OnTouchEvent(MotionEvent e)
         {
-            int action = e.ActionMasked;
+            MotionEventActions action = e.ActionMasked;
             int idx = e.ActionIndex;
             float x = e.GetX(idx), y = e.GetY(idx);
             int pid = e.GetPointerId(idx);
@@ -99,7 +101,6 @@ namespace DuckGame.Android
                     Release(pid);
                     break;
                 case MotionEventActions.Move:
-                    // update which pad each pointer is over
                     if (_active.TryGetValue(pid, out var cur))
                     {
                         if (!cur.Bounds.Contains(x, y))
