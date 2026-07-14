@@ -32,8 +32,31 @@ namespace DuckGame.Android
         {
             base.OnCreate(savedInstanceState);
             RequestWindowFeature(WindowFeatures.NoTitle);
-            Window.SetFlags(WindowManagerFlags.Fullscreen, WindowManagerFlags.Fullscreen);
-            Window.AddFlags(WindowManagerFlags.KeepScreenOn);
+
+            // Hide the Android status + navigation bars (immersive sticky) and let the
+            // game ignore the notch / display cutout (render full-bleed).
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.Kitkat)
+            {
+                Window.SetFlags(WindowManagerFlags.Fullscreen, WindowManagerFlags.Fullscreen);
+                Window.AddFlags(WindowManagerFlags.KeepScreenOn);
+                Window.DecorView.SystemUiVisibility = (StatusBarVisibility)(
+                    (int)global::Android.Views.SystemUiFlags.HideNavigation |
+                    (int)global::Android.Views.SystemUiFlags.Fullscreen |
+                    (int)global::Android.Views.SystemUiFlags.ImmersiveSticky |
+                    (int)global::Android.Views.SystemUiFlags.LayoutHideNavigation |
+                    (int)global::Android.Views.SystemUiFlags.LayoutFullscreen);
+            }
+            else
+            {
+                Window.SetFlags(WindowManagerFlags.Fullscreen, WindowManagerFlags.Fullscreen);
+                Window.AddFlags(WindowManagerFlags.KeepScreenOn);
+            }
+
+            // Allow the game surface to extend into the notch cutout area.
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.P)
+            {
+                Window.Attributes.LayoutInDisplayCutoutMode = global::Android.Views.LayoutInDisplayCutoutMode.ShortEdges;
+            }
 
             // On-screen touch gamepad overlay (injects real SDL keys; game is unmodified)
             _gamepad = new TouchGamepadView(this);
