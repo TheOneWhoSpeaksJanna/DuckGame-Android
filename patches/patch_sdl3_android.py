@@ -295,4 +295,31 @@ patch_file(
 }""",
 )
 
+# ---------------------------------------------------------------------------
+# 5. CMakeLists.txt : force src/core/android/SDL_android.c to compile with
+#    default visibility so our DuckGame-Android bridge symbols are exported
+#    from libSDL3.so (the target sets -fvisibility=hidden otherwise).
+# ---------------------------------------------------------------------------
+CMAKE = "CMakeLists.txt"
+with open(os.path.join(ROOT, CMAKE)) as f:
+    cm = f.read()
+if "SDL_android.c PROPERTIES COMPILE_OPTIONS" not in cm:
+    anchor = """  if(HAVE_GCC_FVISIBILITY)
+    set_target_properties(SDL3-shared PROPERTIES
+      C_VISIBILITY_PRESET "hidden"
+      CXX_VISIBILITY_PRESET "hidden"
+      OBJC_VISIBILITY_PRESET "hidden"
+    )
+  endif()"""
+    assert anchor in cm, "CMakeLists.txt visibility anchor missing"
+    cm = cm.replace(anchor, anchor + """
+  # DuckGame-Android: export the native bridge symbols from SDL_android.c.
+  set_source_files_properties(src/core/android/SDL_android.c PROPERTIES
+    COMPILE_OPTIONS "-fvisibility=default")""")
+    with open(os.path.join(ROOT, CMAKE), "w") as f:
+        f.write(cm)
+    print("OK: " + CMAKE)
+else:
+    print("SKIP: " + CMAKE + " (already patched)")
+
 print("All SDL3 Android patches applied.")
