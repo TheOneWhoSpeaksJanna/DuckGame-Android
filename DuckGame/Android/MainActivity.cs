@@ -71,6 +71,12 @@ namespace DuckGame.Android
             base.OnCreate(savedInstanceState);
             RequestWindowFeature(WindowFeatures.NoTitle);
 
+            // Make the activity window fully transparent so the SurfaceView's
+            // hardware layer (where FNA/SDL renders) shows through. An opaque
+            // window background would composite over the SurfaceView and show
+            // only black even though EGL SwapBuffers succeeds.
+            Window.SetBackgroundDrawable(new global::Android.Graphics.Drawables.ColorDrawable(global::Android.Graphics.Color.Transparent));
+
             // Hide the Android status + navigation bars (immersive sticky) and let the
             // game ignore the notch / display cutout (render full-bleed).
             if (Build.VERSION.SdkInt >= BuildVersionCodes.Kitkat)
