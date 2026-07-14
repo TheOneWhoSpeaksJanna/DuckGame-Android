@@ -96,6 +96,7 @@ namespace DuckGame.Android
 
             // On-screen touch gamepad overlay (injects real SDL keys; game is unmodified)
             _gamepad = new TouchGamepadView(this);
+            _gamepad.SetBackgroundColor(global::Android.Graphics.Color.Transparent);
             AddContentView(_gamepad, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
 
@@ -152,7 +153,7 @@ namespace DuckGame.Android
             }
         }
 
-        public void SurfaceChanged(ISurfaceHolder holder, Android.Graphics.Format format, int width, int height)
+        public void SurfaceChanged(ISurfaceHolder holder, global::Android.Graphics.Format format, int width, int height)
         {
             try
             {
