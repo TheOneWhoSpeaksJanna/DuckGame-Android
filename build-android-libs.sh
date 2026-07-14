@@ -30,10 +30,11 @@ build_cmake() {
 SDL_TAG="release-3.2.4"
 echo "=== cloning SDL3 $SDL_TAG ==="
 git clone --depth 1 --branch "$SDL_TAG" https://github.com/libsdl-org/SDL.git /tmp/SDL3
-build_cmake sdl3 /tmp/SDL3 "-DSDL_STATIC=OFF -DSDL_SHARED=ON -DANDROID=ON"
-export SDL3_DIR="/tmp/SDL3/build-android/SDL3Config.cmake"
+# Set SDL3 paths BEFORE first build_cmake call (it references SDL3_INCLUDE_DIR).
 export SDL3_INCLUDE_DIR="/tmp/SDL3/include"
+export SDL3_DIR="/tmp/SDL3/build-android/SDL3Config.cmake"
 export SDL3_LIB="$(find /tmp/SDL3/build-android -name 'libSDL3.so' | head -1)"
+build_cmake sdl3 /tmp/SDL3 "-DSDL_STATIC=OFF -DSDL_SHARED=ON -DANDROID=ON"
 
 # ---- FAudio ----
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
