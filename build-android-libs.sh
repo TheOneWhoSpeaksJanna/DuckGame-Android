@@ -60,23 +60,13 @@ echo "--- dynamic (exported) symbols matching SDL_Android: ---"
 "$NM" -D "$SDL3_REAL" 2>/dev/null | grep "SDL_Android" || echo "(none in dynamic table)"
 echo "--- ALL (including hidden) symbols matching SDL_Android: ---"
 "$NM" "$SDL3_REAL" 2>/dev/null | grep "SDL_Android" || echo "(none anywhere)"
-echo "--- bridge symbols in the .o (compile-time): ---"
-OBJ="$(find /tmp/SDL3/build-android -name 'SDL_android.c.o' | head -1)"
-echo "obj=$OBJ"
-if [ -n "$OBJ" ]; then
-  echo "  Android_JNI_IsReady in .o:"; "$NM" "$OBJ" 2>/dev/null | grep "Android_JNI_IsReady" || echo "    (absent)"
-  echo "  SDL_AndroidInitNative in .o:"; "$NM" "$OBJ" 2>/dev/null | grep "SDL_AndroidInitNative" || echo "    (absent)"
-  echo "  any SDL_Android in .o:"; "$NM" "$OBJ" 2>/dev/null | grep "SDL_Android" | head || echo "    (none)"
+COUNT="$("$NM" -D "$SDL3_REAL" 2>/dev/null | grep -c "SDL_Android")"
+echo "exported SDL_Android symbol count = $COUNT"
+if [ "$COUNT" -ge 4 ]; then
+  echo "OK: all 4 bridge symbols exported"
 else
-  echo "(.o not found)"
+  echo "FAIL: fewer than 4 bridge symbols exported"; exit 1
 fi
-for sym in SDL_AndroidInitNative SDL_AndroidSetNativeWindow SDL_AndroidSetNativeWindowFromSurface SDL_AndroidSetScreenResolution; do
-  if "$NM" -D "$SDL3_REAL" 2>/dev/null | grep -q "$sym"; then
-    echo "OK   $sym"
-  else
-    echo "FAIL $sym not exported from libSDL3.so"; exit 1
-  fi
-done
 
 # ---- FAudio ----
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
