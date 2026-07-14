@@ -134,7 +134,7 @@ namespace DuckGame.Android
             {
                 // DIAGNOSTIC: make SDL log everything (verbose) to logcat so we
                 // can see which video driver/EGL path FNA takes on Android.
-                Environment.SetEnvironmentVariable("SDL_LOGGING", "verbose");
+                System.Environment.SetEnvironmentVariable("SDL_LOGGING", "verbose");
                 global::DuckGame.Program.Main(new string[0]);
             }
             catch (Exception ex)
