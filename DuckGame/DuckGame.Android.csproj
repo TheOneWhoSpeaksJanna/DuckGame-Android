@@ -75,6 +75,11 @@
 
   <!-- NuGet dependencies (multi-target netstandard2.0/net8) -->
   <ItemGroup>
+    <!-- Force the Microsoft.NETCore.App *reference* assembly to 8.0.28 so the bundled
+         System.Private.CoreLib matches the Android workload's Mono runtime CoreLib
+         (also 8.0.28). The SDK ships Ref 8.0.2, which skews and makes Mono abort on
+         CoreLib load (TypeLoadException). -->
+    <PackageReference Include="Microsoft.NETCore.App.Ref" Version="8.0.28" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0" />
