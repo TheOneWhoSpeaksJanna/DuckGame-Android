@@ -347,4 +347,31 @@ if "SDL_android.c PROPERTIES SKIP_PRECOMPILE_HEADERS" not in cm:
 else:
     print("SKIP: " + CMAKE + " (already patched)")
 
+# ---------------------------------------------------------------------------
+# 8. JNI_OnLoad is ALREADY exported (in SDL_dynapi.sym). Force the bridge
+#    cluster to be retained + exported by referencing all four from it: the
+#    linker keeps everything reachable from an exported symbol, so they
+#    survive --gc-sections and the version script promotes them to dynamic.
+# ---------------------------------------------------------------------------
+patch_file(
+    ANDROID_C,
+    """    register_methods(env, "org/libsdl/app/HIDDeviceManager", HIDDeviceManager_tab, SDL_arraysize(HIDDeviceManager_tab));
+
+    return JNI_VERSION_1_4;
+}""",
+    """    register_methods(env, "org/libsdl/app/HIDDeviceManager", HIDDeviceManager_tab, SDL_arraysize(HIDDeviceManager_tab));
+
+    /* DuckGame-Android: keep the native bridge symbols linked (reachable
+       from this exported JNI_OnLoad). They are also listed in the version
+       script's global: block so they export from the shared lib. */
+    SDL_AndroidInitNative();
+    (void)SDL_AndroidSetNativeWindow;
+    (void)SDL_AndroidSetNativeWindowFromSurface;
+    (void)SDL_AndroidSetScreenResolution;
+
+    return JNI_VERSION_1_4;
+}
+"""
+)
+
 print("All SDL3 Android patches applied.")
