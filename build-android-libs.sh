@@ -52,10 +52,13 @@ export SDL3_LIB="$SDL3_REAL"
 
 # Verify the DuckGame-Android SDL bridge symbols are actually exported.
 echo "=== verifying SDL Android bridge exports (lib=$SDL3_REAL) ==="
-echo "--- all exported SDL_Android* symbols: ---"
-"$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm" -D "$SDL3_REAL" 2>/dev/null | grep "SDL_Android" || echo "(none found)"
+NM="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
+echo "--- dynamic (exported) symbols matching SDL_Android: ---"
+"$NM" -D "$SDL3_REAL" 2>/dev/null | grep "SDL_Android" || echo "(none in dynamic table)"
+echo "--- ALL (including hidden) symbols matching SDL_Android: ---"
+"$NM" "$SDL3_REAL" 2>/dev/null | grep "SDL_Android" || echo "(none anywhere)"
 for sym in SDL_AndroidInitNative SDL_AndroidSetNativeWindow SDL_AndroidSetNativeWindowFromSurface SDL_AndroidSetScreenResolution; do
-  if "$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm" -D "$SDL3_REAL" 2>/dev/null | grep -q " $sym\$"; then
+  if "$NM" -D "$SDL3_REAL" 2>/dev/null | grep -q " $sym\$"; then
     echo "OK   $sym"
   else
     echo "FAIL $sym not exported from libSDL3.so"; exit 1
