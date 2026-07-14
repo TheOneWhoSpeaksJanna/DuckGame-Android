@@ -213,7 +213,7 @@ namespace DuckGame.Android
                 // keep the default (GPU) driver for best performance.
                 if (_isRedroid)
                 {
-                    SDL.SDL_SetHint("FNA3D_DRIVER", "OpenGL");
+                    SDL.SDL_SetHint("FNA3D_FORCE_DRIVER", "OpenGL");
                 }
 
                 // Start the readback-blit pump (redroid only). It reads the
