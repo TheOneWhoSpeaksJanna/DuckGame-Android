@@ -21,9 +21,7 @@
     <!-- Pin the BCL to the exact Microsoft.NETCore.App build the Android workload's
          Mono runtime expects (8.0.28). Without this, the SDK bundles a different
          CoreLib (8.0.2) and Mono aborts on System.Private.CoreLib load. -->
-    <NetCoreAppPackVersion>8.0.28</NetCoreAppPackVersion>
-    <MicrosoftNetCoreAppRefVersion>8.0.28</MicrosoftNetCoreAppRefVersion>
-    <MicrosoftNetCoreAppRuntimeVersion>8.0.28</MicrosoftNetCoreAppRuntimeVersion>
+    <RuntimeFrameworkVersion>8.0.28</RuntimeFrameworkVersion>
     <AndroidUseAapt2>true</AndroidUseAapt2>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <ApplicationId>com.duckgame.game</ApplicationId>
