@@ -57,6 +57,14 @@ echo "--- dynamic (exported) symbols matching SDL_Android: ---"
 "$NM" -D "$SDL3_REAL" 2>/dev/null | grep "SDL_Android" || echo "(none in dynamic table)"
 echo "--- ALL (including hidden) symbols matching SDL_Android: ---"
 "$NM" "$SDL3_REAL" 2>/dev/null | grep "SDL_Android" || echo "(none anywhere)"
+echo "--- bridge symbols in the .o (compile-time): ---"
+OBJ="$(find /tmp/SDL3/build-android -name 'SDL_android.c.o' | head -1)"
+echo "obj=$OBJ"
+if [ -n "$OBJ" ]; then
+  "$NM" "$OBJ" 2>/dev/null | grep "SDL_Android" || echo "(none in .o)"
+else
+  echo "(.o not found)"
+fi
 for sym in SDL_AndroidInitNative SDL_AndroidSetNativeWindow SDL_AndroidSetNativeWindowFromSurface SDL_AndroidSetScreenResolution; do
   if "$NM" -D "$SDL3_REAL" 2>/dev/null | grep -q " $sym\$"; then
     echo "OK   $sym"
