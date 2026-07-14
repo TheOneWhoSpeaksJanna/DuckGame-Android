@@ -36,7 +36,7 @@ namespace DuckGame.Android
     /// </summary>
     [Activity(Label = "Duck Game", Icon = "@drawable/icon", MainLauncher = true, Theme = "@android:style/Theme.NoTitleBar.Fullscreen",
               ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenSize,
-              HardwareAccelerated = true, ScreenOrientation = ScreenOrientation.Landscape)]
+              HardwareAccelerated = false, ScreenOrientation = ScreenOrientation.Landscape)]
     public class MainActivity : Activity, ISurfaceHolderCallback
     {
         private TouchGamepadView _gamepad;
