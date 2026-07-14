@@ -31,7 +31,6 @@
     <Compile Remove="src/MonoTime/Modding/ModLoader/ModLoader.cs" />
     <Compile Remove="src/MonoTime/File/RtfWriter.cs" />
     <Compile Remove="src/XnaToFna/GameFormForWinForms.cs" />
-    <Compile Remove="src/XnaToFna/XnaToFnaUtil.cs" />
     <Compile Remove="src/DuckGame/Network/NMKillDuck.cs" />
     <Compile Remove="src/OnOutputDebugStringHandler.cs" />
     <Compile Remove="src/DebugMonitor.cs" />
@@ -44,7 +43,6 @@
     <!-- Peripheral Windows-only / external-dependency glue that cannot compile on Android -->
     <Compile Remove="AddedContent/klof44/DiscordRichPresence.cs" />
     <Compile Remove="src/XnaToFna/ModCompatibility/ExtraStuff2Replacements.cs" />
-    <Compile Remove="src/MonoTime/Sound/Speech.cs" />
     <Compile Remove="Properties/Settings.Designer.cs" />
     <Compile Remove="Properties/Settings.settings" />
   </ItemGroup>
@@ -67,6 +65,7 @@
     <Reference Include="NVorbis.NAudioSupport"><HintPath>lib\NVorbis.NAudioSupport.dll</HintPath></Reference>
     <Reference Include="0Harmony"><HintPath>lib\0Harmony.dll</HintPath></Reference>
     <Reference Include="Microsoft.Bcl.HashCode"><HintPath>lib\Microsoft.Bcl.HashCode.dll</HintPath></Reference>
+    <Reference Include="DGInput"><HintPath>lib\DGInput.dll</HintPath></Reference>
   </ItemGroup>
 
   <!-- NuGet dependencies (multi-target netstandard2.0/net8) -->
