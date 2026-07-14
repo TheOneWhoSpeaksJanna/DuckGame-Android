@@ -409,8 +409,8 @@ for fn, anchor in [
     ("SDL_GetAndroidExternalStoragePath",
      "const char *SDL_GetAndroidExternalStoragePath(void)\n{\n    static char *s_AndroidExternalFilesPath = NULL;\n"),
     ("SDL_GetAndroidCachePath",
-     "const char *SDL_GetAndroidCachePath(void)\n{\n    // !!! FIXME"),
+     "    static char *s_AndroidCachePath = NULL;\n"),
 ]:
-    patch_file(ANDROID_C, anchor, anchor + "    /* DuckGame-Android: no JavaVM under .NET, skip storage path JNI. */\n    if (!mJavaVM) { return NULL; }\n")
+    patch_file(ANDROID_C, anchor, "    /* DuckGame-Android: no JavaVM under .NET, skip storage path JNI. */\n    if (!mJavaVM) { return NULL; }\n" + anchor)
 
 print("All SDL3 Android patches applied.")
