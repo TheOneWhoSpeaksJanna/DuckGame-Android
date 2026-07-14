@@ -4,24 +4,55 @@
 // Methods accept (params object[]) so any call site (any args/overloads) compiles.
 namespace Steamworks
 {
+    public class CallResult<T>
+    {
+        public delegate void APIDispatchDelegate(T param, bool bIOFailure);
+        public CallResult(APIDispatchDelegate func = null) { }
+        public void Set(SteamAPICall_t hAPICall, APIDispatchDelegate func = null) { }
+    }
+    public struct CreateItemResult_t { public ulong m_handle; public CreateItemResult_t(ulong h){ m_handle = h; } }
+    public struct DownloadItemResult_t { public ulong m_handle; public DownloadItemResult_t(ulong h){ m_handle = h; } }
+    public enum EChatEntryType { }
+    public enum EFriendFlags { }
+    public enum EGamepadTextInputMode { }
+    public enum EItemStatistic { }
+    public enum ELobbyComparison { }
+    public enum ELobbyDistanceFilter { }
+    public enum ELobbyType { }
+    public enum ERemoteStoragePublishedFileVisibility { }
+    public enum EResult { }
+    public enum EUGCMatchingUGCType { }
+    public enum EUGCQuery { }
+    public enum EUserUGCList { }
+    public enum EUserUGCListSortOrder { }
+    public enum EWorkshopFileType { }
+    public struct GameLobbyJoinRequested_t { public ulong m_handle; public GameLobbyJoinRequested_t(ulong h){ m_handle = h; } }
+    public struct GamepadTextInputDismissed_t { public ulong m_handle; public GamepadTextInputDismissed_t(ulong h){ m_handle = h; } }
+    public struct GlobalStatsReceived_t { public ulong m_handle; public GlobalStatsReceived_t(ulong h){ m_handle = h; } }
+    public struct LobbyChatMsg_t { public ulong m_handle; public LobbyChatMsg_t(ulong h){ m_handle = h; } }
+    public struct LobbyChatUpdate_t { public ulong m_handle; public LobbyChatUpdate_t(ulong h){ m_handle = h; } }
+    public struct LobbyCreated_t { public ulong m_handle; public LobbyCreated_t(ulong h){ m_handle = h; } }
+    public struct LobbyEnter_t { public ulong m_handle; public LobbyEnter_t(ulong h){ m_handle = h; } }
+    public struct LobbyMatchList_t { public ulong m_handle; public LobbyMatchList_t(ulong h){ m_handle = h; } }
+    public struct NET { public ulong m_handle; public NET(ulong h){ m_handle = h; } }
+    public struct P2PSessionConnectFail_t { public ulong m_handle; public P2PSessionConnectFail_t(ulong h){ m_handle = h; } }
+    public struct P2PSessionRequest_t { public ulong m_handle; public P2PSessionRequest_t(ulong h){ m_handle = h; } }
+    public struct P2PSessionState_t { public ulong m_handle; public P2PSessionState_t(ulong h){ m_handle = h; } }
+    public struct SteamAPICall_t { public ulong m_handle; public SteamAPICall_t(ulong h){ m_handle = h; } }
+    public struct SteamLeaderboard_t { public ulong m_handle; public SteamLeaderboard_t(ulong h){ m_handle = h; } }
+    public struct SteamNetworkPingLocation_t { public ulong m_handle; public SteamNetworkPingLocation_t(ulong h){ m_handle = h; } }
+    public struct SteamRemotePlaySessionConnected_t { public ulong m_handle; public SteamRemotePlaySessionConnected_t(ulong h){ m_handle = h; } }
+    public struct SteamUGCDetails_t { public ulong m_handle; public SteamUGCDetails_t(ulong h){ m_handle = h; } }
+    public struct SteamUGCQueryCompleted_t { public ulong m_handle; public SteamUGCQueryCompleted_t(ulong h){ m_handle = h; } }
+    public struct SubmitItemUpdateResult_t { public ulong m_handle; public SubmitItemUpdateResult_t(ulong h){ m_handle = h; } }
+    public struct UGCQueryHandle_t { public ulong m_handle; public UGCQueryHandle_t(ulong h){ m_handle = h; } }
+    public struct UserStatsReceived_t { public ulong m_handle; public UserStatsReceived_t(ulong h){ m_handle = h; } }
     public struct CSteamID { public ulong m_SteamID; public CSteamID(ulong id){m_SteamID=id;} public static implicit operator CSteamID(ulong v){return new CSteamID(v);} public ulong m_ulSteamIDLobby; }
     public struct PublishedFileId_t { public ulong m_PublishedFileId; public PublishedFileId_t(ulong id){m_PublishedFileId=id;} public ulong id {get{return m_PublishedFileId;}} }
     public struct AccountID_t { public uint m_AccountID; public AccountID_t(uint id){m_AccountID=id;} }
     public struct AppId_t { public uint m_AppId; public AppId_t(uint id){m_AppId=id;} }
     public struct UGCUpdateHandle_t { public ulong m_UGCUpdateHandle; public UGCUpdateHandle_t(ulong h){m_UGCUpdateHandle=h;} public ulong updateHandle {get{return m_UGCUpdateHandle;}} }
     public struct FriendGameInfo_t { }
-    public class CallResult<T> { }
-    public enum EFriendFlags { k_EFriendFlagAll }
-    public enum ELobbyType { }
-    public enum ELobbyDistanceFilter { k_ELobbyDistanceFilterFar, k_ELobbyDistanceFilterWorldwide }
-    public enum ELobbyComparison { }
-    public enum EWorkshopFileType { k_EWorkshopFileTypeFirst }
-    public enum EItemStatistic { }
-    public enum ERemoteStoragePublishedFileVisibility { }
-    public enum EGamepadTextInputMode { k_EGamepadTextInputModeNormal }
-    public enum EItemState { }
-    public enum EResult { }
-    public enum EChatEntryType { }
     public class CallbackDispatcher { }
     public class NativeMethods { }
     public static class SteamUGC
