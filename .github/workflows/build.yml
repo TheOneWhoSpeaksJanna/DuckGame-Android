@@ -14,16 +14,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup .NET 8 (1xx band — must match the Android workload's
-          System.Private.CoreLib 8.0.0; the 4xx band ships CoreLib 8.0.2 which
-          crashes Mono's assembly load hook on Android)
-        run: |
-          curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
-          chmod +x dotnet-install.sh
-          ./dotnet-install.sh --channel 8.0.1xx --install-dir $HOME/.dotnet8
-          echo "$HOME/.dotnet8" >> "$GITHUB_PATH"
-          "$HOME/.dotnet8/dotnet" --version
-
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
       - name: Install Android workload
         run: dotnet workload install android
 
