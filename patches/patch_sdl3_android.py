@@ -286,4 +286,29 @@ patch_file(
 }""",
 )
 
+# ---------------------------------------------------------------------------
+# 6. src/dynapi/SDL_dynapi.sym : the version script restricts exported
+#    symbols. Add our DuckGame-Android bridge symbols before the
+#    "extra symbols" marker (otherwise they're hidden by `local: *`).
+# ---------------------------------------------------------------------------
+SYM = "src/dynapi/SDL_dynapi.sym"
+with open(os.path.join(ROOT, SYM)) as f:
+    sym = f.read()
+if "SDL_AndroidSetNativeWindowFromSurface" not in sym:
+    marker = "    # extra symbols go here (don't modify this line)\n"
+    assert marker in sym, "SDL_dynapi.sym marker missing"
+    extra = (
+        "    SDL_AndroidInitNative;\n"
+        "    SDL_AndroidSetNativeWindow;\n"
+        "    SDL_AndroidSetNativeWindowFromSurface;\n"
+        "    SDL_AndroidSetScreenResolution;\n"
+        + marker
+    )
+    sym = sym.replace(marker, extra)
+    with open(os.path.join(ROOT, SYM), "w") as f:
+        f.write(sym)
+    print("OK: " + SYM)
+else:
+    print("SKIP: " + SYM + " (already patched)")
+
 print("All SDL3 Android patches applied.")
