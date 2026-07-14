@@ -61,7 +61,9 @@ echo "--- bridge symbols in the .o (compile-time): ---"
 OBJ="$(find /tmp/SDL3/build-android -name 'SDL_android.c.o' | head -1)"
 echo "obj=$OBJ"
 if [ -n "$OBJ" ]; then
-  "$NM" "$OBJ" 2>/dev/null | grep "SDL_Android" || echo "(none in .o)"
+  echo "  Android_JNI_IsReady in .o:"; "$NM" "$OBJ" 2>/dev/null | grep "Android_JNI_IsReady" || echo "    (absent)"
+  echo "  SDL_AndroidInitNative in .o:"; "$NM" "$OBJ" 2>/dev/null | grep "SDL_AndroidInitNative" || echo "    (absent)"
+  echo "  any SDL_Android in .o:"; "$NM" "$OBJ" 2>/dev/null | grep "SDL_Android" | head || echo "    (none)"
 else
   echo "(.o not found)"
 fi
