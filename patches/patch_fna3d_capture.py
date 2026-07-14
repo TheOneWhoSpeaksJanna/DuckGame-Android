@@ -117,17 +117,4 @@ patch_file(
     "\tSDLGPU_INTERNAL_FlushCommands(renderer);\n" + CAPTURE,
 )
 
-# 3. Keep the exported bridge symbols linked (referenced from a reachable
-#    function so --gc-sections / -O2 cannot drop them).
-REF = r'''    /* DuckGame-Android: keep capture bridge symbols linked + exported. */
-    (void) DuckGame_SetCapture;
-    (void) DuckGame_LockPixels;
-'''
-# Find the SDLGPU_CreateDevice function and add the reference near its top.
-patch_file(
-    SRC,
-    "static bool SDLGPU_CreateDevice(\n",
-    "static bool SDLGPU_CreateDevice(\n" + REF,
-)
-
 print("OK: " + SRC)
