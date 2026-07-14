@@ -9,7 +9,7 @@
     <RootNamespace>DuckGame</RootNamespace>
     <!-- Android packaging -->
     <AndroidPackageFormats>apk</AndroidPackageFormats>
-    <AndroidSupportedAbis>arm64-v8a</AndroidSupportedAbis>
+    <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <RunAotCompilation>false</RunAotCompilation>
     <AndroidUseAapt2>true</AndroidUseAapt2>
@@ -20,7 +20,6 @@
     <TargetAndroidApiLevel>34</TargetAndroidApiLevel>
     <EnableDefaultItems>true</EnableDefaultItems>
     <ManagePackageReferencesCentrally>false</ManagePackageReferencesCentrally>
-    <!-- FNA is a plain class library; no extra defines needed -->
     <DefineConstants>$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
@@ -38,15 +37,15 @@
     <Compile Remove="src/DiscordRichPresence.cs" />
     <Compile Remove="src/MonoTime/Console/Commands/DansTestArea.cs" />
     <Compile Remove="src/DuckGame/Levels/XMLLevel.cs" />
-    <!-- Windows platform-specific renderer shims: kept; System.Drawing.Common provides the backing types -->
+    <Compile Remove="src/MonoTime/Console/NetworkConsole.resx" />
   </ItemGroup>
 
   <!-- FNA engine (managed; native libs loaded at runtime) -->
   <ItemGroup>
-    <ProjectReference Include="..\..\FNA\FNA.Core.csproj" />
+    <ProjectReference Include="..\FNA\FNA.Core.csproj" />
   </ItemGroup>
 
-  <!-- NuGet dependencies the game actually uses (all multi-target netstandard2.0/net8) -->
+  <!-- NuGet dependencies the game actually uses (multi-target netstandard2.0/net8) -->
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
@@ -56,19 +55,20 @@
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="Mono.Cecil" Version="0.11.5" />
   </ItemGroup>
 
   <!-- Bundle game content + assets into the APK -->
   <ItemGroup>
-    <AndroidAsset Include="Content\**\*" Link="Content\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="Content/**/*" Link="Content/%(RecursiveDir)%(Filename)%(Extension)" />
     <AndroidAsset Include="spriteatlas.png" Link="spriteatlas.png" />
     <AndroidAsset Include="spriteatlas_offsets.txt" Link="spriteatlas_offsets.txt" />
-    <AndroidAsset Include="AddedContent\**\*" Link="AddedContent\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="AddedContent/**/*" Link="AddedContent/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <!-- Native FNA libs (SDL2/FNA3D/FAudio/theorafile/mojoshader) are deployed by CI into libs/arm64-v8a -->
+  <!-- Native FNA libs (SDL3/FNA3D/FAudio/theorafile/mojoshader) deployed by CI into libs/arm64-v8a -->
   <ItemGroup>
-    <AndroidNativeLibrary Include="libs\arm64-v8a\*.so" />
+    <AndroidNativeLibrary Include="libs/arm64-v8a/*.so" />
   </ItemGroup>
 </Project>
