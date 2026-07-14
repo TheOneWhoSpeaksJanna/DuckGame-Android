@@ -14,13 +14,18 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install .NET 8 SDK (latest 8.0.x — ships Microsoft.NETCore.App.Ref 8.0.28,
+          matching the Android workload's Mono runtime CoreLib 8.0.28; using the
+          runner's older pre-installed SDK would bundle a mismatched 8.0.2 CoreLib
+          and Mono aborts on System.Private.CoreLib load)
+        run: |
+          curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
+          chmod +x dotnet-install.sh
+          ./dotnet-install.sh --channel 8.0 --install-dir $HOME/.dotnet8
+          echo "$HOME/.dotnet8" >> "$GITHUB_PATH"
+          "$HOME/.dotnet8/dotnet" --version
+
       - name: Install Android workload
-        # IMPORTANT: use the runner's pre-installed dotnet. Installing a separate
-        # 8.0.x SDK (actions/setup-dotnet) bundles a Microsoft.NETCore.App whose
-        # System.Private.CoreLib (8.0.2) mismatches the Android workload's Mono
-        # runtime CoreLib (8.0.28), which crashes Mono's assembly load hook
-        # (TypeLoadException on System.Private.CoreLib). The runner's dotnet is
-        # already aligned with its workload, so we just add the android workload.
         run: dotnet workload install android
 
       - name: Install Android SDK + NDK + build tools
