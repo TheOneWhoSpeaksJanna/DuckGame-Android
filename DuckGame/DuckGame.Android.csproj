@@ -14,10 +14,10 @@
     <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <RunAotCompilation>false</RunAotCompilation>
-    <!-- Leave the BCL / System.Private.CoreLib untouched by the linker. The default
-         linker rewrites CoreLib metadata which can trigger a Mono TypeLoadException
-         in the assembly load hook on Android. None avoids that. -->
-    <AndroidLinkMode>None</AndroidLinkMode>
+    <!-- NOTE: do NOT set AndroidLinkMode=None. The default SdkOnly linker is what
+         swaps the Microsoft.NETCore.App *reference* System.Private.CoreLib for the
+         runtime implementation. With None, the ref CoreLib (no IL) gets bundled and
+         Mono aborts on load (TypeLoadException in the assembly load hook). -->
     <!-- Pin the BCL to the exact Microsoft.NETCore.App build the Android workload's
          Mono runtime expects (8.0.28). Without this, the SDK bundles a different
          CoreLib (8.0.2) and Mono aborts on System.Private.CoreLib load. -->
@@ -80,12 +80,9 @@
 
   <!-- NuGet dependencies (multi-target netstandard2.0/net8) -->
   <ItemGroup>
-    <!-- Steamworks.NET: re-added because its transitive Microsoft.NETCore.App
-         pin (8.0.0.x matching the Android workload's Mono runtime) is required
-         for System.Private.CoreLib to load without a Mono TypeLoadException.
-         DGSteam.dll no longer references this assembly (it uses the internal
-         Steamworks stub in Steam/Stubs), so the dll is bundled but never loaded. -->
-    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
+    <!-- Steamworks.NET is NOT referenced here: DGSteam.dll uses the internal
+         Steamworks stub (Steam/Stubs), which avoids bundling Steamworks.NET's
+         reference assembly (XA0107) and the invalid-CIL runtime load failure. -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0" />
