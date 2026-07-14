@@ -8,11 +8,13 @@ runs. This patch:
   1. Self-acquires the ART JavaVM in native C (JNI_GetCreatedJavaVMs) so the
      JNI helpers are functional if ever needed.
   2. Reads the ANativeWindow from a global we set from managed code
-     (SDL_AndroidSetNativeWindow) instead of calling the absent Java
-     getNativeSurface, and exposes SDL_AndroidSetNativeWindow /
-     SDL_AndroidSetScreenResolution / SDL_AndroidInitNative entry points.
-  3. Makes Android_JNI_SetOrientation / SuspendScreenSaver / display-orientation
-     lookups no-op when there is no JavaVM (we drive orientation ourselves).
+     (SDL_AndroidSetNativeWindow / ...FromSurface) instead of calling the
+     absent Java getNativeSurface, and exposes SDL_AndroidInitNative /
+     SDL_AndroidSetNativeWindow(FromSurface) / SDL_AndroidSetScreenResolution
+     entry points with default visibility + 'used' so they survive
+     -fvisibility=hidden and --gc-sections and are exported from libSDL3.so.
+  3. Makes Android_JNI_SetOrientation / display-orientation lookups no-op when
+     there is no JavaVM (we drive orientation ourselves).
   4. Skips Android_InitTouch / Android_InitMouse / display-orientation init in
      Android_VideoInit when there is no JavaVM (we inject keyboard input and
      don't need Android touch/mouse).
@@ -49,7 +51,6 @@ SDL_ANDROID_H = "src/core/android/SDL_android.h"
 with open(os.path.join(ROOT, SDL_ANDROID_H)) as f:
     h = f.read()
 if "SDL_AndroidSetNativeWindow" not in h:
-    # Insert right after the existing Android_JNI_GetNativeWindow extern.
     anchor = "extern ANativeWindow *Android_JNI_GetNativeWindow(void);\n"
     assert anchor in h, "SDL_android.h anchor missing"
     h = h.replace(anchor, anchor + """
@@ -71,7 +72,7 @@ else:
 
 # ---------------------------------------------------------------------------
 # 2. core/android/SDL_android.c : globals, native window, bridge functions,
-#    guarded orientation / screensaver / display-orientation helpers.
+#    guarded orientation helpers.
 # ---------------------------------------------------------------------------
 ANDROID_C = "src/core/android/SDL_android.c"
 
@@ -145,35 +146,15 @@ patch_file(
 }""",
 )
 
-# Android_JNI_GetDisplayNaturalOrientation / CurrentOrientation: return stored
-# values (safe without JavaVM).
-patch_file(
-    ANDROID_C,
-    """SDL_DisplayOrientation Android_JNI_GetDisplayNaturalOrientation(void)
-{
-    return displayNaturalOrientation;
-}""",
-    """SDL_DisplayOrientation Android_JNI_GetDisplayNaturalOrientation(void)
-{
-    return displayNaturalOrientation;
-}""",
-)
-# (those two are already trivial; the guard is at the VideoInit call site.)
-
 # Insert the new bridge functions + Android_JNI_IsReady before
 # Android_JNI_SetActivityTitle.
-patch_file(
-    ANDROID_C,
-    "void Android_JNI_SetActivityTitle(const char *title)\n{",
-    """#pragma GCC visibility push(default)
-
-bool Android_JNI_IsReady(void)
+BRIDGE = """bool Android_JNI_IsReady(void)
 {
     return mJavaVM != NULL;
 }
 
 /* DuckGame-Android: 'used' keeps these symbols from being dropped by
-   --gc-sections (no internal callers), 'visibility default' exports them
+   --gc-sections (no internal callers); 'visibility default' exports them
    from libSDL3.so despite the target's -fvisibility=hidden. */
 __attribute__((visibility("default"), used))
 void SDL_AndroidInitNative(void)
@@ -228,10 +209,13 @@ void SDL_AndroidSetScreenResolution(int surfaceWidth, int surfaceHeight,
                                 deviceHeight, density, rate);
 }
 
-#pragma GCC visibility pop
-
 void Android_JNI_SetActivityTitle(const char *title)
-{""",
+{"""
+
+patch_file(
+    ANDROID_C,
+    "void Android_JNI_SetActivityTitle(const char *title)\n{",
+    BRIDGE,
 )
 
 # ---------------------------------------------------------------------------
