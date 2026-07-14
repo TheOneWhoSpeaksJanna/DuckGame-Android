@@ -305,6 +305,7 @@ if "SDL_AndroidSetNativeWindowFromSurface" not in sym:
         "    SDL_AndroidSetNativeWindow;\n"
         "    SDL_AndroidSetNativeWindowFromSurface;\n"
         "    SDL_AndroidSetScreenResolution;\n"
+        "    SDL_AndroidSetJavaVM;\n"
         + marker
     )
     sym = sym.replace(marker, extra)
@@ -368,6 +369,7 @@ patch_file(
     (void)SDL_AndroidSetNativeWindow;
     (void)SDL_AndroidSetNativeWindowFromSurface;
     (void)SDL_AndroidSetScreenResolution;
+    (void)SDL_AndroidSetJavaVM;
 
     return JNI_VERSION_1_4;
 }
@@ -399,9 +401,62 @@ patch_file(
 )
 
 # ---------------------------------------------------------------------------
-# 10. Several SDL_Android* storage-path helpers dereference a NULL JNIEnv when
-#     there is no JavaVM (JNI_OnLoad never runs under .NET's dlopen). Guard
-#     them to return NULL gracefully so init (gamepad mappings, etc.) skips.
+# 11. Asset manager + input JNI guards. Under .NET Android, JNI_OnLoad never
+#     runs so mJavaVM is NULL and SDL's activity JNI fields (mActivityClass,
+#     midGetContext, ...) are never registered. We provide a bridge the managed
+#     host calls with the real JavaVM* + Context so SDL can build the
+#     AAssetManager (used to read game files from the APK). We deliberately do
+#     NOT set mJavaVM (attach/detach locally instead) so every activity-JNI
+#     entry point stays guarded and no-ops instead of dereferencing the NULL
+#     activity class. We also guard the asset-manager + input JNI builders.
+# ---------------------------------------------------------------------------
+# 11a. Provide SDL_AndroidSetJavaVM(vm, context) exported bridge.
+BRIDGE2 = r'''
+/* DuckGame-Android: native bridge so the .NET host can hand SDL a real
+   Android JavaVM* and Context so SDL can build the AAssetManager (used to
+   read game files from the APK). SDL's own Java activity / JNI_OnLoad never
+   runs under .NET's dlopen, so mActivityClass etc. stay NULL; we only attach
+   to grab the AAssetManager and then detach, leaving mJavaVM NULL so all the
+   other activity-JNI paths stay guarded + no-op. */
+__attribute__((visibility("default"), used))
+void SDL_AndroidSetJavaVM(void *vm, void *context)
+{
+    if (!vm || !context) {
+        return;
+    }
+    JavaVM *javaVM = (JavaVM *)vm;
+    JNIEnv *env = NULL;
+    if ((*javaVM)->AttachCurrentThread(javaVM, &env, NULL) < 0 || !env) {
+        return;
+    }
+    jobject assets = (*env)->CallObjectMethod(env, (jobject)context,
+        (*env)->GetMethodID(env, (*env)->GetObjectClass(env, (jobject)context),
+            "getAssets", "()Landroid/content/res/AssetManager;"));
+    if (assets) {
+        javaAssetManagerRef = (*env)->NewGlobalRef(env, assets);
+        asset_manager = AAssetManager_fromJava(env, javaAssetManagerRef);
+    }
+    (*javaVM)->DetachCurrentThread(javaVM);
+}
+'''
+patch_file(
+    ANDROID_C,
+    "void Android_JNI_SetActivityTitle(const char *title)\n{",
+    BRIDGE2 + "void Android_JNI_SetActivityTitle(const char *title)\n{",
+)
+
+# 11b. Guard the asset-manager + input JNI builders to no-op without a JavaVM.
+for anchor in [
+    "static void Internal_Android_Create_AssetManager(void)\n{\n",
+    "void Android_JNI_PollInputDevices(void)\n{\n    JNIEnv *env = Android_JNI_GetEnv();\n",
+    "void Android_JNI_InitTouch(void)\n{\n    JNIEnv *env = Android_JNI_GetEnv();\n",
+]:
+    guard = "    /* DuckGame-Android: no JavaVM under .NET, skip. */\n    if (!mJavaVM) { return; }\n"
+    patch_file(ANDROID_C, anchor, anchor + guard)
+
+# ---------------------------------------------------------------------------
+# 10 (reinstated). Several SDL_Android* storage-path helpers dereference a NULL
+#     JNIEnv when there is no JavaVM. Guard them to return NULL gracefully.
 # ---------------------------------------------------------------------------
 STORAGE_GUARD = "    /* DuckGame-Android: no JavaVM under .NET, skip storage path JNI. */\n    if (!mJavaVM) { return NULL; }\n"
 for static_line in [
