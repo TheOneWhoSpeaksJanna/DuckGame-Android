@@ -32,11 +32,12 @@ git clone --depth 1 --branch "$SDL_TAG" https://github.com/libsdl-org/SDL.git /t
 build_cmake sdl3 /tmp/SDL3 "-DSDL_STATIC=OFF -DSDL_SHARED=ON -DANDROID=ON"
 export SDL3_DIR="/tmp/SDL3/build-android/SDL3Config.cmake"
 export SDL3_INCLUDE_DIR="/tmp/SDL3/include"
+export SDL3_LIB="$(find /tmp/SDL3/build-android -name 'libSDL3.so' | head -1)"
 
 # ---- FAudio ----
-build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR"
+build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- FNA3D (includes MojoShader) ----
-build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DSDL3_DIR=$SDL3_DIR"
+build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- Theorafile ----
 build_cmake theorafile "$FNA/Theorafile" "-DBUILD_TESTS=OFF"
 
