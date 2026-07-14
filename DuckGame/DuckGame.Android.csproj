@@ -47,6 +47,9 @@
          EnumDisplaySettings, CrashWindow.exe, DGInput.dll). It is replaced on
          Android by Android/WindowsPlatformStartupShim.cs (no-op stubs). -->
     <Compile Remove="src/WindowsPlatformStartup.cs" />
+    <!-- DInputPad.cs is Windows DirectInput (needs DGInput.dll's DInputState); XInput
+         is the equivalent path on Android, so exclude it and use XInputPad instead. -->
+    <Compile Remove="src/MonoTime/Input/DInputPad.cs" />
   </ItemGroup>
 
   <!-- FNA engine (managed; native libs loaded at runtime) -->

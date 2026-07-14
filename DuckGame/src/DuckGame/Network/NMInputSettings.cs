@@ -107,7 +107,7 @@ namespace DuckGame
                         deviceInputMapping.deviceOverride = new XInputPad(0);
                         break;
                     default:
-                        deviceInputMapping.deviceOverride = new DInputPad(0);
+                        deviceInputMapping.deviceOverride = new XInputPad(0);
                         break;
                 }
                 deviceInputMapping.deviceOverride.overrideMap = deviceInputMapping;
