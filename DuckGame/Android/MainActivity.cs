@@ -146,9 +146,8 @@ namespace DuckGame.Android
                 int h = metrics.HeightPixels;
                 float density = metrics.Density;
                 SDL_AndroidSetScreenResolution(w, h, w, h, density, 60.0f);
-                SDL_AndroidSetNativeWindow(nativeWindow);
 
-                Log.Info("DuckGame", "SDL Android surface handed to SDL: " + nativeWindow);
+                Log.Info("DuckGame", "SDL Android surface handed to SDL");
                 _surfaceReady.Set();
             }
             catch (Exception ex)
