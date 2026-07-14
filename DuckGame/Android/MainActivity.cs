@@ -144,7 +144,16 @@ namespace DuckGame.Android
                 _blitView = new BlitView(this);
                 AddContentView(_blitView, new ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
-                try { SDL_DuckGameSetCapture(1); } catch (Exception ex) { Log.Warn("DuckGame", "capture set failed: " + ex.Message); }
+                try
+                {
+                    SDL_DuckGameSetCapture(1);
+                    Log.Info("DuckGame", "redroid: readback-blit capture ENABLED");
+                }
+                catch (Exception ex) { Log.Warn("DuckGame", "capture set failed: " + ex.Message); }
+            }
+            else
+            {
+                Log.Info("DuckGame", "not redroid (model='" + global::Android.OS.Build.Model + "'); native SurfaceView path");
             }
 
             // On-screen touch gamepad. Try to float it above the SurfaceView via
@@ -220,6 +229,7 @@ namespace DuckGame.Android
         // game is visible on redroid. No-op on real devices (no _blitView).
         private void BlitLoop()
         {
+            int frames = 0;
             while (_blitRunning && _blitView != null)
             {
                 try
@@ -228,13 +238,13 @@ namespace DuckGame.Android
                     if (SDL_DuckGameLockPixels(out w, out h, out px) != 0 && w > 0 && h > 0 && px != IntPtr.Zero)
                     {
                         _blitView.PushFrame(w, h, px);
+                        if ((++frames % 30) == 0) Log.Info("DuckGame", "blit frames=" + frames + " " + w + "x" + h);
                     }
                 }
                 catch (Exception ex)
                 {
                     Log.Warn("DuckGame", "blit: " + ex.Message);
                 }
-                // ~30fps mirror; cheap relative to game render.
                 Thread.Sleep(33);
             }
         }

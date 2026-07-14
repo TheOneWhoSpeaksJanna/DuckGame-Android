@@ -68,6 +68,15 @@ else
   echo "FAIL: fewer than 4 bridge symbols exported"; exit 1
 fi
 
+echo "=== verifying capture symbol exports ==="
+CAPCOUNT="$(\"$NM\" -D \"$SDL3_REAL\" 2>/dev/null | grep -c \"SDL_DuckGame\")"
+echo "exported SDL_DuckGame symbol count = $CAPCOUNT"
+if [ "$CAPCOUNT" -ge 2 ]; then
+  echo "OK: capture symbols exported"
+else
+  echo "FAIL: capture symbols not exported"; exit 1
+fi
+
 # ---- FAudio ----
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- FNA3D (includes MojoShader) ----
