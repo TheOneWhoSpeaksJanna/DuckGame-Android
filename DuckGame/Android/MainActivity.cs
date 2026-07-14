@@ -123,7 +123,7 @@ namespace DuckGame.Android
             {
                 Gravity = GravityFlags.Fill
             };
-            var wm = (IWindowManager)GetSystemService(WindowService).JavaCast<WindowManager>();
+            var wm = GetSystemService(WindowService).JavaCast<IWindowManager>();
             wm.AddView(_gamepad, lp);
 
             // Run the real game loop on a background thread; the main (UI) thread
