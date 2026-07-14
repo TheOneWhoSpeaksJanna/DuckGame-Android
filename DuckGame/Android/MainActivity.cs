@@ -33,21 +33,20 @@ namespace DuckGame.Android
         // bionic RTLD_DEFAULT (searches the global symbol scope).
         private static readonly IntPtr RTLD_DEFAULT = (IntPtr)(-2);
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate int GetCreatedJavaVMs(out IntPtr vm, int bufLen, out int nVMs);
-
         public static void Init()
         {
             try
             {
-                // ART's JNI_GetCreatedJavaVMs is in libart.so (or libnativehelper),
-                // but neither soname resolves via DllImport from the app. Resolve
-                // it from the global symbol scope via dlopen/dlsym instead.
-                IntPtr sym = dlsym(RTLD_DEFAULT, "JNI_GetCreatedJavaVMs");
+                // .NET Android stores its JavaVM* in libmonodroid.so's global
+                // "monodroid_java_vm" (a JavaVM**). Resolve it from the global
+                // symbol scope (ART's JNI_GetCreatedJavaVMs is a broken stub
+                // on Android and crashes the linker if called).
+                IntPtr sym = dlsym(RTLD_DEFAULT, "monodroid_java_vm");
                 if (sym != IntPtr.Zero)
                 {
-                    var getVMs = (GetCreatedJavaVMs)Marshal.GetDelegateForFunctionPointer(sym, typeof(GetCreatedJavaVMs));
-                    if (getVMs(out IntPtr javaVM, 1, out int nVMs) == 0 && nVMs > 0 && javaVM != IntPtr.Zero)
+                    // sym is JavaVM** -> read the JavaVM*.
+                    IntPtr javaVM = Marshal.ReadIntPtr(sym);
+                    if (javaVM != IntPtr.Zero)
                         SDL_SetJavaVM(javaVM);
                 }
             }
