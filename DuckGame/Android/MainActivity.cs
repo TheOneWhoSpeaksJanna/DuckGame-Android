@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -24,7 +23,6 @@ namespace DuckGame.Android
               HardwareAccelerated = true, ScreenOrientation = ScreenOrientation.Landscape)]
     public class MainActivity : Activity
     {
-        private Thread _gameThread;
         private TouchGamepadView _gamepad;
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -61,21 +59,19 @@ namespace DuckGame.Android
             _gamepad = new TouchGamepadView(this);
             AddContentView(_gamepad, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
 
-            // Run the actual game (DuckGame.Program.Main) on its own thread so the
-            // Android UI thread stays free. FNA + SDL3 handle the surface.
-            _gameThread = new Thread(() =>
+            // FNA/SDL must own the main (UI) thread and the Android surface, so run
+            // the real game loop directly on this thread (it blocks until exit).
+            // Running it on a background thread let Android's lifecycle destroy the
+            // SDL window mutex from the wrong context -> "pthread_mutex_lock on a
+            // destroyed mutex" crash ~2s after launch.
+            try
             {
-                try
-                {
-                    global::DuckGame.Program.Main(new string[0]);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("DuckGame", "Game thread exited: " + ex);
-                }
-            });
-            _gameThread.IsBackground = true;
-            _gameThread.Start();
+                global::DuckGame.Program.Main(new string[0]);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("DuckGame", "Game loop exited: " + ex);
+            }
         }
 
         public override void OnBackPressed()
