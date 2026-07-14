@@ -89,7 +89,10 @@ build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EX
 # which is where our readback-blit capture hook lives. The OpenGL driver
 # calls SDL_GL_SwapWindow -> Android_GLES_SwapWindow, so capture works.
 # OpenGL also runs fine on real devices.
-build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DBUILD_SDL3=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
+# We keep USE_SDL3 defined (so MojoShader includes <SDL3/SDL_assert.h>
+# and finds the SDL3 headers) but turn BUILD_SDL3 OFF to drop the GPU
+# driver from the build.
+build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DBUILD_SDL3=OFF -DUSE_SDL3 -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- Theorafile (Makefile-based; bundle ogg/theora/vorbis) ----
 echo "=== building theorafile (Makefile) ==="
 TF="$FNA/Theorafile"
