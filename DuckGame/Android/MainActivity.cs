@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
 using Android.App;
-using Java.Interop;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
@@ -25,15 +24,16 @@ namespace DuckGame.Android
         [DllImport("libSDL3.so")]
         private static extern void SDL_SetJavaVM(IntPtr vm);
 
+        [DllImport("libart.so")]
+        private static extern int JNI_GetCreatedJavaVMs(out IntPtr vm, int bufLen, out int nVMs);
+
         public static void Init()
         {
             try
             {
-                // .NET Android already created the ART JavaVM; expose its pointer
-                // via Java.Interop (InvokationPointer == JavaVM* layout). SDL's
-                // Android driver needs it before SDL_Init(VIDEO).
-                IntPtr javaVM = Java.Interop.JniRuntime.Current.InvokationPointer;
-                if (javaVM != IntPtr.Zero)
+                // ART always exports JNI_GetCreatedJavaVMs; grab the already
+                // created JavaVM* and hand it to SDL's Android driver.
+                if (JNI_GetCreatedJavaVMs(out IntPtr javaVM, 1, out int nVMs) == 0 && nVMs > 0 && javaVM != IntPtr.Zero)
                     SDL_SetJavaVM(javaVM);
             }
             catch (Exception ex)
