@@ -45,7 +45,7 @@ namespace DuckGame.Android
     {
         private TouchGamepadView _gamepad;
         private TextureView _textureView;
-        private Android.Views.Surface _renderSurface;
+        private global::Android.Views.Surface _renderSurface;
         private readonly ManualResetEvent _surfaceReady = new ManualResetEvent(false);
 
         // --- Patched SDL3 Android bridge (exported from libSDL3.so) ---
@@ -149,7 +149,7 @@ namespace DuckGame.Android
         }
 
         // TextureView.ISurfaceTextureListener: a renderable Surface is ready here (UI thread).
-        public void OnSurfaceTextureAvailable(Android.Graphics.SurfaceTexture surfaceTexture, int width, int height)
+        public void OnSurfaceTextureAvailable(global::Android.Graphics.SurfaceTexture surfaceTexture, int width, int height)
         {
             try
             {
@@ -183,7 +183,7 @@ namespace DuckGame.Android
             }
         }
 
-        public void OnSurfaceTextureSizeChanged(Android.Graphics.SurfaceTexture surfaceTexture, int width, int height)
+        public void OnSurfaceTextureSizeChanged(global::Android.Graphics.SurfaceTexture surfaceTexture, int width, int height)
         {
             try
             {
@@ -199,7 +199,7 @@ namespace DuckGame.Android
             }
         }
 
-        public bool OnSurfaceTextureDestroyed(Android.Graphics.SurfaceTexture surfaceTexture)
+        public bool OnSurfaceTextureDestroyed(global::Android.Graphics.SurfaceTexture surfaceTexture)
         {
             try
             {
@@ -209,7 +209,7 @@ namespace DuckGame.Android
             return true; // let the SurfaceTexture be released
         }
 
-        public void OnSurfaceTextureUpdated(Android.Graphics.SurfaceTexture surfaceTexture)
+        public void OnSurfaceTextureUpdated(global::Android.Graphics.SurfaceTexture surfaceTexture)
         {
             // Called after each frame is queued; nothing to do.
         }
