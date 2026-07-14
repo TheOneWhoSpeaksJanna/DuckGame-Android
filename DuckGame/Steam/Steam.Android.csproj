@@ -8,6 +8,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);__ANDROID__</DefineConstants>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <NoWarn>SYSLIB0003;SYSLIB0032;CS0436</NoWarn>
@@ -16,9 +17,10 @@
   <ItemGroup>
     <Compile Include="src/**/*.cs" />
     <Compile Include="Properties/AssemblyInfo.cs" />
-    <!-- Steamworks.NET compile-time stub: the real Steamworks.NET needs a native
-         steam_api (no Android build) and its managed impl fails to load under Mono
-         on Android. This inert shim provides the exact API surface DGSteam uses. -->
-    <Compile Include="Stubs/SteamworksStub.cs" />
+    <!-- Real Steamworks.NET (managed wrapper, exact API types DGSteam expects).
+         The native steam_api is only P/Invoked by SteamAPI.Init(), which we
+         guard to a no-op on Android (see Steam.InitializeCore), so no native
+         steam lib is required/loaded on the device. -->
+    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
   </ItemGroup>
 </Project>

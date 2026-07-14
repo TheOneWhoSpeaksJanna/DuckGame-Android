@@ -86,9 +86,10 @@
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
     <PackageReference Include="System.CodeDom" Version="8.0.0" />
-    <!-- The game's Steam wrapper (DGSteam) is compiled against an internal
-         Steamworks stub (see Steam/Stubs), so no Steamworks.NET assembly is needed
-         at runtime. Steam is non-functional on Android regardless. -->
+    <!-- The game's Steam wrapper (DGSteam, Steam.Android.csproj) now
+         compiles against the real Steamworks.NET NuGet. SteamAPI.Init() is
+         guarded to a no-op on Android (__ANDROID__), so no native
+         steam_api is loaded. Steam is non-functional on Android regardless. -->
     <!-- Roslyn 4.8.0 — ModLoader compiles mods at runtime (ModLoader.cs uses
          CSharpCompilation etc.). The using-namespace consumer (XMLLevel) is also
          covered. These packages are required for the build; the linker is set to

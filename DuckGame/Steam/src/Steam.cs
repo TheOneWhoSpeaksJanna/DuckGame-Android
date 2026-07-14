@@ -93,8 +93,16 @@ public class Steam : IDisposable {
         return SteamRemoteStorage.IsCloudEnabledForAccount() && SteamRemoteStorage.IsCloudEnabledForApp();
     }
     public static bool InitializeCore() {
+        // On Android there is no Steam client / native steam_api, so skip init
+        // entirely (Steam stays uninitialized; all Steam paths are guarded by
+        // `initialized` / `IsInitialized` and remain inert).
+#if __ANDROID__
+        _initialized = false;
+        return false;
+#else
         _initialized = SteamAPI.Init();
         return initialized;
+#endif
     }
     public static unsafe bool IsLoggedIn()
     {
