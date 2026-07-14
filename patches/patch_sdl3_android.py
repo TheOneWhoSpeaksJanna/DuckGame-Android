@@ -369,6 +369,9 @@ patch_file(
     (void)SDL_AndroidSetNativeWindow;
     (void)SDL_AndroidSetNativeWindowFromSurface;
     (void)SDL_AndroidSetScreenResolution;
+    /* Also keep the readback-blit capture symbols linked + exported. */
+    (void)SDL_DuckGameSetCapture;
+    (void)SDL_DuckGameLockPixels;
 
     return JNI_VERSION_1_4;
 }
