@@ -71,7 +71,7 @@ else
   echo "(.o not found)"
 fi
 for sym in SDL_AndroidInitNative SDL_AndroidSetNativeWindow SDL_AndroidSetNativeWindowFromSurface SDL_AndroidSetScreenResolution; do
-  if "$NM" -D "$SDL3_REAL" 2>/dev/null | grep -q " $sym\$"; then
+  if "$NM" -D "$SDL3_REAL" 2>/dev/null | grep -q " $sym\(\| $sym@"; then
     echo "OK   $sym"
   else
     echo "FAIL $sym not exported from libSDL3.so"; exit 1
