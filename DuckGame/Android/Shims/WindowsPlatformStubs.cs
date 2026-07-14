@@ -39,10 +39,11 @@ namespace DbMon.NET { }
 namespace DGWindows { }
 
 // ---- SHA256Cng (Windows-only crypto, used by ModLoader to hash mods) ----
-// Compiles on net8.0-android (SHA256 is cross-platform); behavior is identical.
+// net8 has no SHA256Cng; it's just SHA256. Derive from SHA256Managed so the
+// unmodified ModLoader code computes real hashes unchanged.
 namespace System.Security.Cryptography
 {
-    public sealed class SHA256Cng : SHA256
+    public sealed class SHA256Cng : SHA256Managed
     {
         public SHA256Cng() { }
     }
