@@ -16,4 +16,12 @@ namespace System.Windows.Forms
 
 // HarmonyLoader is imported by a few files but never used on the compiled Android
 // path (the real Harmony loader is Windows/mod-loading only).
-namespace HarmonyLoader { }
+namespace HarmonyLoader
+{
+    public static class Loader
+    {
+        public static HarmonyLib.Harmony harmonyInstance;
+        public static System.Func<System.Reflection.MethodBase, System.Reflection.MethodInfo, System.Reflection.MethodInfo, System.Reflection.MethodInfo, bool> ShouldPatch;
+        public static System.Func<System.Exception, System.Reflection.MethodBase, System.Reflection.MethodInfo, System.Reflection.MethodInfo, System.Reflection.MethodInfo, bool> PatchCrash;
+    }
+}

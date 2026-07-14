@@ -615,7 +615,7 @@ namespace DuckGame
 
         public static string GetInfiniteLoopDetails()
         {
-            string str = new StackTrace(mainThread, true).ToString();
+            string str = new StackTrace(true).ToString();
             int length = str.IndexOf("at Microsoft.Xna.Framework.Game.Tick");
             return length >= 0 ? str.Substring(0, length) : str;
         }

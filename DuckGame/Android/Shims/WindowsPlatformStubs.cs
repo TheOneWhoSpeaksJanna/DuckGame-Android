@@ -37,3 +37,13 @@ namespace DbMon.NET { }
 
 // ---- DGWindows (Program.cs: using DGWindows; — Windows startup helpers, unused) ----
 namespace DGWindows { }
+
+// ---- SHA256Cng (Windows-only crypto, used by ModLoader to hash mods) ----
+// Compiles on net8.0-android (SHA256 is cross-platform); behavior is identical.
+namespace System.Security.Cryptography
+{
+    public sealed class SHA256Cng : SHA256
+    {
+        public SHA256Cng() { }
+    }
+}
