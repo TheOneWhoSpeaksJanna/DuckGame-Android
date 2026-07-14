@@ -47,8 +47,13 @@ export SDL3_LIB="$SDL3_REAL"
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- FNA3D (includes MojoShader) ----
 build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
-# ---- Theorafile ----
-build_cmake theorafile "$FNA/Theorafile" "-DBUILD_TESTS=OFF"
+# ---- Theorafile (Makefile-based; bundle ogg/theora/vorbis) ----
+echo "=== building theorafile (Makefile) ==="
+TF="$FNA/Theorafile"
+NDK_CLANG="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
+( cd "$TF" && make clean && CC="$NDK_CLANG --target=aarch64-none-linux-android$API --sysroot=$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot -fPIC -O3" \
+    CFLAGS="-fPIC -O3" LDFLAGS="-shared" lib )
+cp -f "$TF/libtheorafile.so" "$OUT/"
 
 echo "=== produced libs ==="
 ls -la "$OUT"
