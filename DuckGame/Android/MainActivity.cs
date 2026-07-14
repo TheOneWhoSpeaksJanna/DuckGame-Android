@@ -108,7 +108,7 @@ namespace DuckGame.Android
             // render shows through instead of the window's black/transparent
             // fill, while the on-screen buttons stay visible on top.
             _surfaceView.SetZOrderMediaOverlay(true);
-            _surfaceView.Holder.SetFormat(Android.Graphics.Format.Opaque);
+            _surfaceView.Holder.SetFormat(global::Android.Graphics.Format.Opaque);
             AddContentView(_surfaceView, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
             _surfaceView.Holder.AddCallback(this);
