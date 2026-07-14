@@ -30,6 +30,13 @@ build_cmake() {
 SDL_TAG="release-3.2.4"
 echo "=== cloning SDL3 $SDL_TAG ==="
 git clone --depth 1 --branch "$SDL_TAG" https://github.com/libsdl-org/SDL.git /tmp/SDL3
+# DuckGame-Android: patch SDL3's Android driver so it works without SDL's Java
+# SDLActivity glue (the .NET Android host supplies the native window directly).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/patches/patch_sdl3_android.py" ]; then
+  echo "=== patching SDL3 Android driver ==="
+  ( cd /tmp/SDL3 && python3 "$SCRIPT_DIR/patches/patch_sdl3_android.py" )
+fi
 # Set SDL3 paths BEFORE first build_cmake call (it references SDL3_INCLUDE_DIR).
 export SDL3_INCLUDE_DIR="/tmp/SDL3/include"
 export SDL3_DIR="/tmp/SDL3/build-android/SDL3Config.cmake"

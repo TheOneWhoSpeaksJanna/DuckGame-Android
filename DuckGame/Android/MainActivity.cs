@@ -1,4 +1,6 @@
 using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -13,31 +15,47 @@ using Android.Views;
 
 namespace DuckGame.Android
 {
-    // FNA's SDL3 video init selects the Android driver, which requires SDL's
-    // Java SDLActivity glue (nativeSetupJNI / nativeSetScreenResolution /
-    // onNativeSurfaceCreated -> SDL_SetAndroidSurface) to have already handed
-    // SDL the ART JavaVM* AND the Android native window (Surface) + screen
-    // resolution. FNA's desktop SDL_Init path never invokes that glue, so
-    // there is no Android backend for FNA. A correct port needs that
-    // surface/window handoff reimplemented (a real platform layer), not a
-    // config toggle. Until then this is intentionally a documented no-op
-    // so the failure mode stays the clean "no JavaVM" diagnosis.
-    internal static class SdlAndroidBridge
-    {
-        public static void Init() { /* see note above */ }
-    }
-
     /// <summary>
-    /// FNA/XNA Android activity. Hosts the game window via SDL3 and runs the
-    /// real Duck Game game loop on a dedicated thread. No game logic is modified;
-    /// this only launches DuckGame.Program.Main on Android.
+    /// FNA/XNA Android activity. Hosts a SurfaceView (so Android gives us an
+    /// ANativeWindow), hands that native window + screen resolution to the
+    /// patched SDL3 Android driver, then runs the real Duck Game game loop on
+    /// a background thread. No game logic is modified.
+    ///
+    /// FNA's desktop SDL_Init(VIDEO) selects SDL's Android driver, which
+    /// normally expects SDL's Java SDLActivity glue to have supplied the
+    /// JavaVM + native window + screen resolution. Our SDL3 build is patched
+    /// (see patches/patch_sdl3_android.py) to accept those directly from here
+    /// instead, so the game gets a real EGL surface to render into.
+    ///
+    /// The surface callback is dispatched on the main (UI) thread's looper, so
+    /// the game loop must run on a separate thread and wait for the surface to
+    /// be ready before it inits video (otherwise SDL_CreateWindow gets a NULL
+    /// window). This mirrors SDL's own Java activity threading model.
     /// </summary>
     [Activity(Label = "Duck Game", Icon = "@drawable/icon", MainLauncher = true, Theme = "@android:style/Theme.NoTitleBar.Fullscreen",
               ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenSize,
               HardwareAccelerated = true, ScreenOrientation = ScreenOrientation.Landscape)]
-    public class MainActivity : Activity
+    public class MainActivity : Activity, ISurfaceHolderCallback
     {
         private TouchGamepadView _gamepad;
+        private SurfaceView _surfaceView;
+        private readonly ManualResetEvent _surfaceReady = new ManualResetEvent(false);
+
+        // --- Patched SDL3 Android bridge (exported from libSDL3.so) ---
+        [DllImport("libSDL3.so")]
+        private static extern void SDL_AndroidInitNative();
+
+        [DllImport("libSDL3.so")]
+        private static extern void SDL_AndroidSetScreenResolution(
+            int surfaceWidth, int surfaceHeight, int deviceWidth, int deviceHeight,
+            float density, float rate);
+
+        [DllImport("libSDL3.so")]
+        private static extern void SDL_AndroidSetNativeWindow(IntPtr window);
+
+        // Convert an Android Surface to an ANativeWindow* (libandroid.so, NDK).
+        [DllImport("libandroid.so")]
+        private static extern IntPtr ANativeWindow_fromSurface(IntPtr env, IntPtr surface);
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -69,12 +87,33 @@ namespace DuckGame.Android
                 Window.Attributes.LayoutInDisplayCutoutMode = global::Android.Views.LayoutInDisplayCutoutMode.ShortEdges;
             }
 
+            // SurfaceView: Android's UI toolkit that owns an ANativeWindow we can
+            // hand to SDL. It sits behind the transparent touch-gamepad overlay.
+            _surfaceView = new SurfaceView(this);
+            AddContentView(_surfaceView, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            _surfaceView.Holder.AddCallback(this);
+
             // On-screen touch gamepad overlay (injects real SDL keys; game is unmodified)
             _gamepad = new TouchGamepadView(this);
-            AddContentView(_gamepad, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            AddContentView(_gamepad, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
 
-            // FNA/SDL must own the main (UI) thread and the Android surface, so run
-            // the real game loop directly on this thread (it blocks until exit).
+            // Run the real game loop on a background thread; the main (UI) thread
+            // stays free so the surface callback can fire and hand SDL the window.
+            var gameThread = new Thread(RunGameLoop)
+            {
+                Name = "DuckGame",
+                IsBackground = false
+            };
+            gameThread.Start();
+        }
+
+        private void RunGameLoop()
+        {
+            // Wait until SurfaceCreated (on the UI thread) has handed SDL the
+            // ANativeWindow, otherwise SDL_CreateWindow gets a NULL window.
+            _surfaceReady.WaitOne();
             try
             {
                 global::DuckGame.Program.Main(new string[0]);
@@ -83,6 +122,60 @@ namespace DuckGame.Android
             {
                 Log.Error("DuckGame", "Game loop exited: " + ex);
             }
+        }
+
+        // ISurfaceHolderCallback: the native window is ready here (UI thread).
+        public void SurfaceCreated(ISurfaceHolder holder)
+        {
+            try
+            {
+                IntPtr env = JNIEnv.Handle;
+                IntPtr surface = JNIEnv.ToJniHandle(holder.Surface);
+                IntPtr nativeWindow = ANativeWindow_fromSurface(env, surface);
+
+                // Make SDL's Android driver ready (acquire JavaVM) and give it the
+                // surface + a sensible screen resolution before FNA inits video.
+                SDL_AndroidInitNative();
+                var metrics = Resources.DisplayMetrics;
+                int w = metrics.WidthPixels;
+                int h = metrics.HeightPixels;
+                float density = metrics.Density;
+                SDL_AndroidSetScreenResolution(w, h, w, h, density, 60.0f);
+                SDL_AndroidSetNativeWindow(nativeWindow);
+
+                Log.Info("DuckGame", "SDL Android surface handed to SDL: " + nativeWindow);
+                _surfaceReady.Set();
+            }
+            catch (Exception ex)
+            {
+                Log.Error("DuckGame", "Failed to hand surface to SDL: " + ex);
+            }
+        }
+
+        public void SurfaceChanged(ISurfaceHolder holder, Android.Graphics.Format format, int width, int height)
+        {
+            try
+            {
+                IntPtr env = JNIEnv.Handle;
+                IntPtr surface = JNIEnv.ToJniHandle(holder.Surface);
+                IntPtr nativeWindow = ANativeWindow_fromSurface(env, surface);
+                SDL_AndroidSetNativeWindow(nativeWindow);
+                SDL_AndroidSetScreenResolution(width, height, width, height,
+                    Resources.DisplayMetrics.Density, 60.0f);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("DuckGame", "Failed to update surface: " + ex);
+            }
+        }
+
+        public void SurfaceDestroyed(ISurfaceHolder holder)
+        {
+            try
+            {
+                SDL_AndroidSetNativeWindow(IntPtr.Zero);
+            }
+            catch { }
         }
 
         public override void OnBackPressed()
