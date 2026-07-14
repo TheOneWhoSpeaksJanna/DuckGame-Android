@@ -53,9 +53,12 @@ namespace DuckGame.Android
         [DllImport("libSDL3.so")]
         private static extern void SDL_AndroidSetNativeWindow(IntPtr window);
 
-        // Convert an Android Surface to an ANativeWindow* (libandroid.so, NDK).
-        [DllImport("libandroid.so")]
-        private static extern IntPtr ANativeWindow_fromSurface(IntPtr env, IntPtr surface);
+        // Wrapper in patched libSDL3.so: converts an Android Surface (jobject)
+        // to an ANativeWindow* via ANativeWindow_fromSurface (SDL3 links
+        // libandroid, so we avoid p/invoking libandroid.so from managed code,
+        // which .NET Android does not preload).
+        [DllImport("libSDL3.so")]
+        private static extern void SDL_AndroidSetNativeWindowFromSurface(IntPtr env, IntPtr surface);
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -132,7 +135,8 @@ namespace DuckGame.Android
             {
                 IntPtr env = global::Android.Runtime.JNIEnv.Handle;
                 IntPtr surface = global::Android.Runtime.JNIEnv.ToJniHandle(holder.Surface);
-                IntPtr nativeWindow = ANativeWindow_fromSurface(env, surface);
+                // SDL (patched) converts the Surface to an ANativeWindow.
+                SDL_AndroidSetNativeWindowFromSurface(env, surface);
 
                 // Make SDL's Android driver ready (acquire JavaVM) and give it the
                 // surface + a sensible screen resolution before FNA inits video.
@@ -159,8 +163,8 @@ namespace DuckGame.Android
             {
                 IntPtr env = global::Android.Runtime.JNIEnv.Handle;
                 IntPtr surface = global::Android.Runtime.JNIEnv.ToJniHandle(holder.Surface);
-                IntPtr nativeWindow = ANativeWindow_fromSurface(env, surface);
-                SDL_AndroidSetNativeWindow(nativeWindow);
+                // SDL (patched) converts the Surface to an ANativeWindow.
+                SDL_AndroidSetNativeWindowFromSurface(env, surface);
                 SDL_AndroidSetScreenResolution(width, height, width, height,
                     Resources.DisplayMetrics.Density, 60.0f);
             }

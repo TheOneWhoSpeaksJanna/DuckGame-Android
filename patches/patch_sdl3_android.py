@@ -57,6 +57,7 @@ if "SDL_AndroidSetNativeWindow" not in h:
    Java SDLActivity glue (the .NET Android host sets these directly). */
 extern void SDL_AndroidInitNative(void);
 extern void SDL_AndroidSetNativeWindow(ANativeWindow *window);
+extern void SDL_AndroidSetNativeWindowFromSurface(void *env, void *surface);
 extern void SDL_AndroidSetScreenResolution(int surfaceWidth, int surfaceHeight,
                                             int deviceWidth, int deviceHeight,
                                             float density, float rate);
@@ -196,6 +197,20 @@ void SDL_AndroidSetNativeWindow(ANativeWindow *window)
                                SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER, window);
         Android_SendResize(Android_Window);
     }
+}
+
+/* DuckGame-Android: convenience wrapper so the managed host doesn't need to
+   p/invoke libandroid.so (not preloaded by .NET Android). SDL3 already links
+   libandroid, so we do the ANativeWindow_fromSurface conversion here. */
+__attribute__((visibility("default")))
+void SDL_AndroidSetNativeWindowFromSurface(void *env, void *surface)
+{
+    if (!surface) {
+        SDL_AndroidSetNativeWindow(NULL);
+        return;
+    }
+    ANativeWindow *window = ANativeWindow_fromSurface((JNIEnv *)env, (jobject)surface);
+    SDL_AndroidSetNativeWindow(window);
 }
 
 __attribute__((visibility("default")))
