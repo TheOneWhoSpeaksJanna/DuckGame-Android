@@ -38,11 +38,7 @@
     <Compile Remove="src/DiscordRichPresence.cs" />
     <Compile Remove="src/MonoTime/Console/Commands/DansTestArea.cs" />
     <Compile Remove="src/DuckGame/Levels/XMLLevel.cs" />
-    <!-- Windows platform-specific renderer shims (System.Drawing) kept out; FNA provides drawing -->
-    <Compile Remove="src/SystemDrawing/DGSizeF.cs" />
-    <Compile Remove="src/SystemDrawing/DGPoint.cs" />
-    <Compile Remove="src/SystemDrawing/DGSize.cs" />
-    <Compile Remove="src/SystemDrawing/DGPointF.cs" />
+    <!-- Windows platform-specific renderer shims: kept; System.Drawing.Common provides the backing types -->
   </ItemGroup>
 
   <!-- FNA engine (managed; native libs loaded at runtime) -->

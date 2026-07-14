@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Android.Content;
 using Android.Graphics;
 using Android.Views;
-using SDL2;
+using SDL3;
 
 namespace DuckGame.Android
 {

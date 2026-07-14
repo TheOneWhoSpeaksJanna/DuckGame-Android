@@ -25,11 +25,11 @@ build_cmake() {
   find "$b" -name "*.so" -exec cp {} "$OUT/" \;
 }
 
-# ---- SDL2 (official source) ----
-SDL_TAG="release-2.28.5"
-echo "=== cloning SDL2 $SDL_TAG ==="
-git clone --depth 1 --branch "$SDL_TAG" https://github.com/libsdl-org/SDL.git /tmp/SDL2
-build_cmake sdl2 /tmp/SDL2 "-DSDL_STATIC=OFF -DSDL_SHARED=ON -DANDROID=ON"
+# ---- SDL3 (the DGR-FNA fork targets SDL3) ----
+SDL_TAG="release-3.2.4"
+echo "=== cloning SDL3 $SDL_TAG ==="
+git clone --depth 1 --branch "$SDL_TAG" https://github.com/libsdl-org/SDL.git /tmp/SDL3
+build_cmake sdl3 /tmp/SDL3 "-DSDL_STATIC=OFF -DSDL_SHARED=ON -DANDROID=ON"
 
 # ---- FAudio ----
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF"
@@ -43,7 +43,7 @@ build_cmake theorafile "$FNA/Theorafile" "-DBUILD_TESTS=OFF"
 echo "=== produced libs ==="
 ls -la "$OUT"
 # sanity: ensure the core libs exist
-for lib in libSDL2.so libFAudio.so libFNA3D.so libtheorafile.so; do
+for lib in libSDL3.so libFAudio.so libFNA3D.so libtheorafile.so; do
   [ -f "$OUT/$lib" ] || { echo "MISSING $lib"; exit 1; }
 done
 echo "ALL NATIVE LIBS PRESENT"
