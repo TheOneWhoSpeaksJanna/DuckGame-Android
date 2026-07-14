@@ -232,8 +232,12 @@ patch_file(
     return true;""",
     """    /* DuckGame-Android: keep the native bridge symbols linked (they have no
        other internal caller, so --gc-sections would otherwise drop them).
-       SDL_AndroidInitNative is a no-op; it just forces retention. */
+       We both call one and take the address of all four to force retention. */
     SDL_AndroidInitNative();
+    (void)SDL_AndroidInitNative;
+    (void)SDL_AndroidSetNativeWindow;
+    (void)SDL_AndroidSetNativeWindowFromSurface;
+    (void)SDL_AndroidSetScreenResolution;
 
     display = SDL_GetVideoDisplay(displayID);
     display->natural_orientation = Android_JNI_GetDisplayNaturalOrientation();
