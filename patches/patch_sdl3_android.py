@@ -369,7 +369,10 @@ patch_file(
     (void)SDL_AndroidSetNativeWindow;
     (void)SDL_AndroidSetNativeWindowFromSurface;
     (void)SDL_AndroidSetScreenResolution;
-    /* Also keep the readback-blit capture symbols linked + exported. */
+    /* Also keep the readback-blit capture symbols (defined in SDL_androidgl.c)
+       linked + exported. Declared here so this TU compiles. */
+    extern void SDL_DuckGameSetCapture(int);
+    extern int SDL_DuckGameLockPixels(int *, int *, unsigned char **);
     (void)SDL_DuckGameSetCapture;
     (void)SDL_DuckGameLockPixels;
 
