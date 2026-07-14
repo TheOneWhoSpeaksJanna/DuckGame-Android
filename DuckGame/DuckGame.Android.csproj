@@ -81,10 +81,12 @@
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
     <PackageReference Include="System.CodeDom" Version="8.0.0" />
-    <!-- Steamworks.NET: bundled so DGSteam.dll (which references it) can load at
-         runtime on Android. Steam is non-functional on device but the managed
+    <!-- Steamworks.NET implementation assembly (committed). Bundled so DGSteam.dll
+         can load at runtime. Steam is non-functional on device but the managed
          assembly must be present for the game to start. -->
-    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
+    <Reference Include="Steamworks.NET">
+      <HintPath>Steam\lib\Steamworks.NET.dll</HintPath>
+    </Reference>
     <!-- Roslyn 4.8.0 (ModLoader compiles mods / XMLLevel) -->
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
@@ -104,24 +106,4 @@
   <ItemGroup>
     <AndroidNativeLibrary Include="libs/arm64-v8a/*.so" />
   </ItemGroup>
-
-  <!-- Steamworks.NET ships both a ref/ (metadata-only) and lib/ (implementation)
-       assembly. The .NET Android SDK prefers the ref/ one for the APK assemblies
-       blob, but Mono needs the real implementation at runtime. This target copies
-       the implementation dll over the ref copy in the intermediate assemblies dir. -->
-  <Target Name="InjectSteamworksImplAssembly"
-          AfterTargets="ResolveAssemblies;_CopyOutOfDateSourceItemsToOutputDirectory">
-    <PropertyGroup>
-      <_SWImpl>$(NuGetPackageRoot)steamworks.net\2024.8.0\lib\netstandard2.1\Steamworks.NET.dll</_SWImpl>
-    </PropertyGroup>
-    <Message Text="InjectSteamworksImplAssembly: _SWImpl = $(_SWImpl)" Importance="high" />
-    <Copy Condition="Exists('$(_SWImpl)')"
-      SourceFiles="$(_SWImpl)"
-      DestinationFiles="$(IntermediateOutputPath)assemblies\Steamworks.NET.dll"
-      SkipUnchangedFiles="true" />
-    <Copy Condition="Exists('$(_SWImpl)')"
-      SourceFiles="$(_SWImpl)"
-      DestinationFiles="$(OutDir)Steamworks.NET.dll"
-      SkipUnchangedFiles="true" />
-  </Target>
 </Project>

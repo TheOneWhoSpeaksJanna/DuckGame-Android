@@ -19,9 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Real Steamworks.NET (valid managed IL). Steam is non-functional on Android
-         (no native steam_api), but the managed assembly lets DGSteam compile and load;
-         all Steam calls are guarded by Steam.IsInitialized (false on Android). -->
-    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
+    <!-- Steamworks.NET implementation assembly (committed, valid managed IL). Steam
+         is non-functional on Android (no native steam_api), but the managed assembly
+         lets DGSteam compile and load; Steam calls are guarded by Steam.IsInitialized. -->
+    <Reference Include="Steamworks.NET">
+      <HintPath>lib\Steamworks.NET.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
