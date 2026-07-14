@@ -33,6 +33,11 @@ git clone --depth 1 --branch "$SDL_TAG" https://github.com/libsdl-org/SDL.git /t
 # Set SDL3 paths BEFORE first build_cmake call (it references SDL3_INCLUDE_DIR).
 export SDL3_INCLUDE_DIR="/tmp/SDL3/include"
 export SDL3_DIR="/tmp/SDL3/build-android/SDL3Config.cmake"
+# Make SDL3 headers globally visible to ALL sub-builds (incl. MojoShader) by
+# installing them into the NDK sysroot include dir.
+SYSROOT_INC="$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include"
+mkdir -p "$SYSROOT_INC/SDL3"
+cp -rf /tmp/SDL3/include/SDL3/. "$SYSROOT_INC/SDL3/"
 build_cmake sdl3 /tmp/SDL3 "-DSDL_STATIC=OFF -DSDL_SHARED=ON -DANDROID=ON"
 # Use the SDL3 build dir's own libSDL3.so directly (it's copied to OUT by build_cmake too).
 SDL3_REAL="$(find /tmp/SDL3/build-android -name 'libSDL3.so' | head -1)"
