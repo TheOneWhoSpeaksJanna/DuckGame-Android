@@ -14,12 +14,11 @@
     <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <RunAotCompilation>false</RunAotCompilation>
-    <!-- Keep the DEFAULT (SdkOnly) linker: it is what swaps the Microsoft.NETCore.App
-         *reference* System.Private.CoreLib for the runtime implementation. Do NOT set
-         AndroidLinkMode=None (that bundles the ref CoreLib with no IL -> Mono aborts). -->
-    <!-- Steamworks.NET NuGet is referenced here ONLY to pin Microsoft.NETCore.App to
-         8.0.28 (matching the Android workload's Mono runtime CoreLib). DGSteam.dll uses
-         the internal Steamworks stub, so Steamworks.NET.dll is bundled but never loaded. -->
+    <!-- Pin the BCL reference assembly to 8.0.28 so the app's System.Private.CoreLib
+         matches the Android workload's Mono runtime CoreLib (also 8.0.28). The latest
+         8.0.x SDK ships Ref 8.0.2, which skews from the workload's 8.0.28 and makes
+         Mono abort (TypeLoadException) while loading CoreLib. -->
+    <MicrosoftNetCoreAppRefVersion>8.0.28</MicrosoftNetCoreAppRefVersion>
     <AndroidUseAapt2>true</AndroidUseAapt2>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <ApplicationId>com.duckgame.game</ApplicationId>
@@ -76,10 +75,6 @@
 
   <!-- NuGet dependencies (multi-target netstandard2.0/net8) -->
   <ItemGroup>
-    <!-- Steamworks.NET: provides the Microsoft.NETCore.App 8.0.28 dependency that
-         pins the bundled CoreLib to match the Android workload's Mono runtime.
-         DGSteam uses the internal stub, so this dll is bundled but not loaded. -->
-    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0" />
