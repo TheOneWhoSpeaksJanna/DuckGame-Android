@@ -22,6 +22,9 @@
     <TargetAndroidApiLevel>34</TargetAndroidApiLevel>
     <EnableDefaultItems>true</EnableDefaultItems>
     <ManagePackageReferencesCentrally>false</ManagePackageReferencesCentrally>
+    <!-- Suppress obsolete-as-error diagnostics for APIs the game legitimately
+         uses (BinaryFormatter for XnaToFna saves, CAS attributes in Steam wrapper). -->
+    <NoWarn>SYSLIB0011;SYSLIB0001;SYSLIB0003;SYSLIB0032;CS0436;CS8981;CA2255;CA1416;MSB3825</NoWarn>
   </PropertyGroup>
 
   <!-- Compile the real game source verbatim; exclude only true duplicates / peripheral glue -->
