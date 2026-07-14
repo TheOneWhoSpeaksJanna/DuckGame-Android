@@ -155,7 +155,7 @@ namespace DuckGame.Android
             {
                 // Wrap the SurfaceTexture in a Surface, then hand SDL a JNIEnv*
                 // + the Surface jobject so it can build the ANativeWindow.
-                _renderSurface = new Android.Views.Surface(surfaceTexture);
+                _renderSurface = new global::Android.Views.Surface(surfaceTexture);
                 IntPtr env = global::Android.Runtime.JNIEnv.Handle;
                 IntPtr surface = global::Android.Runtime.JNIEnv.ToJniHandle(_renderSurface);
                 IntPtr ctx = global::Android.Runtime.JNIEnv.ToJniHandle(this);
