@@ -525,7 +525,8 @@ patch_file(
     return result;
 }
 """,
-    """    /* DuckGame-Android: capture the backbuffer for the readback-blit path. */
+    """    __android_log_print(ANDROID_LOG_INFO, "DuckGame", "SWAP called w=%d h=%d capture=%d", window->w, window->h, g_DuckGameCapture);
+    /* DuckGame-Android: capture the backbuffer for the readback-blit path. */
     if (g_DuckGameCapture) {
         int w = window->w;
         int h = window->h;
