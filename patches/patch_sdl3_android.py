@@ -55,10 +55,10 @@ if "SDL_AndroidSetNativeWindow" not in h:
     h = h.replace(anchor, anchor + """
 /* DuckGame-Android: native bridge so SDL's Android driver works without the
    Java SDLActivity glue (the .NET Android host sets these directly). */
-extern void SDL_AndroidInitNative(void);
-extern void SDL_AndroidSetNativeWindow(ANativeWindow *window);
-extern void SDL_AndroidSetNativeWindowFromSurface(void *env, void *surface);
-extern void SDL_AndroidSetScreenResolution(int surfaceWidth, int surfaceHeight,
+extern __attribute__((visibility("default"))) void SDL_AndroidInitNative(void);
+extern __attribute__((visibility("default"))) void SDL_AndroidSetNativeWindow(ANativeWindow *window);
+extern __attribute__((visibility("default"))) void SDL_AndroidSetNativeWindowFromSurface(void *env, void *surface);
+extern __attribute__((visibility("default"))) void SDL_AndroidSetScreenResolution(int surfaceWidth, int surfaceHeight,
                                             int deviceWidth, int deviceHeight,
                                             float density, float rate);
 extern bool Android_JNI_IsReady(void);

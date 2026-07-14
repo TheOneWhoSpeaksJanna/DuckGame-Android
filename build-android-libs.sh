@@ -50,6 +50,16 @@ build_cmake sdl3 /tmp/SDL3 "-DSDL_STATIC=OFF -DSDL_SHARED=ON -DANDROID=ON"
 SDL3_REAL="$(find /tmp/SDL3/build-android -name 'libSDL3.so' | head -1)"
 export SDL3_LIB="$SDL3_REAL"
 
+# Verify the DuckGame-Android SDL bridge symbols are actually exported.
+echo "=== verifying SDL Android bridge exports ==="
+for sym in SDL_AndroidInitNative SDL_AndroidSetNativeWindow SDL_AndroidSetNativeWindowFromSurface SDL_AndroidSetScreenResolution; do
+  if "$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm" -D "$SDL3_REAL" 2>/dev/null | grep -q " $sym\$"; then
+    echo "OK   $sym"
+  else
+    echo "FAIL $sym not exported from libSDL3.so"; exit 1
+  fi
+done
+
 # ---- FAudio ----
 build_cmake faudio "$FNA/FAudio" "-DBUILD_TESTS=OFF -DBUILD_UTILS=OFF -DBUILD_EXAMPLES=OFF -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
 # ---- FNA3D (includes MojoShader) ----
