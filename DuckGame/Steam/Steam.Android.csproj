@@ -16,10 +16,8 @@
   <ItemGroup>
     <Compile Include="src/**/*.cs" />
     <Compile Include="Properties/AssemblyInfo.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Real Steamworks.NET: provides the full Steamworks.* API the wrapper uses -->
-    <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
+    <!-- Steamworks.NET stub: real Steamworks.NET needs native steam_api (no Android
+         build); this inert shim lets DGSteam load and the game compile unchanged. -->
+    <Compile Include="Stubs/SteamworksStub.cs" />
   </ItemGroup>
 </Project>
