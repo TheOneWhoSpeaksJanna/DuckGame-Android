@@ -203,6 +203,16 @@ namespace DuckGame.Android
                 // Force SDL's Android video driver (FNA's desktop path might
                 // otherwise pick a non-Android driver on .NET Android).
                 SDL.SDL_SetHint("SDL_VIDEODRIVER", "android");
+                // On redroid we capture the GL backbuffer via a patched
+                // Android_GLES_SwapWindow hook, which only fires on the OpenGL
+                // FNA3D driver (the SDL3 GPU driver presents a swapchain
+                // texture instead). Force the OpenGL driver so the readback
+                // path works. Real devices use the native SurfaceView path and
+                // keep the default (GPU) driver for best performance.
+                if (redroid)
+                {
+                    SDL.SDL_SetHint("FNA3D_DRIVER", "OpenGL");
+                }
 
                 // Start the readback-blit pump (redroid only). It reads the
                 // captured backbuffer and draws it onto the Canvas BlitView.
