@@ -306,6 +306,7 @@ if "SDL_AndroidSetNativeWindowFromSurface" not in sym:
         "    SDL_AndroidSetNativeWindowFromSurface;\n"
         "    SDL_AndroidSetScreenResolution;\n"
         "    SDL_AndroidSetJavaVM;\n"
+        "    SDL_AndroidSendResume;\n"
         + marker
     )
     sym = sym.replace(marker, extra)
