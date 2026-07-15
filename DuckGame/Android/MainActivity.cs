@@ -325,6 +325,30 @@ namespace DuckGame.Android
             }
         }
 
+        // Reads an Android system property via getprop (best-effort; returns
+        // "" on any failure). Used to let CI/testers override the FNA3D driver
+        // (e.g. `setprop duckgame.driver OpenGL`) without a rebuild.
+        private static string GetSystemProp(string name)
+        {
+            try
+            {
+                var p = new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo("getprop", name)
+                    {
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+                p.Start();
+                string v = p.StandardOutput.ReadToEnd().Trim();
+                p.WaitForExit();
+                return v ?? "";
+            }
+            catch { return ""; }
+        }
+
         private void RunGameLoop()
         {
             // Wait until SurfaceCreated (on the UI thread) has handed SDL the
@@ -335,14 +359,18 @@ namespace DuckGame.Android
                 // Force SDL's Android video driver (FNA's desktop path might
                 // otherwise pick a non-Android driver on .NET Android).
                 SDL.SDL_SetHint("SDL_VIDEODRIVER", "android");
-                // On redroid we DON'T force a driver: let FNA3D pick its
-                // default (SDLGPU / Vulkan). redroid 14's Vulkan HAL
-                // (vulkan.pastel.so) creates the device OK; it then SIGSEGVs
-                // when JIT-compiling the first shader on the initial draw.
-                // That still lets the FNA3D_Clear "GAME LOOP RAN" probe fire,
-                // proving the game loop executes (Update+Draw running) before
-                // the redroid GPU JIT defect kills presentation. Real devices
-                // keep the native Vulkan path unchanged and render normally.
+                // FNA3D driver selection. Default: let FNA3D pick (SDLGPU/Vulkan
+                // on real devices). A system property can override it for
+                // testing, e.g. `setprop duckgame.driver OpenGL`. Vulkan/SDLGPU
+                // SIGSEGVs ~11s into the render loop on current SDL3+FNA3D, so a
+                // real device may need the OpenGL backend (mature, stable on
+                // real GPUs). redroid is handled separately below.
+                string driverOverride = GetSystemProp("duckgame.driver");
+                if (!string.IsNullOrEmpty(driverOverride))
+                {
+                    SDL.SDL_SetHint("FNA3D_FORCE_DRIVER", driverOverride);
+                    Log.Info("DuckGame", "driver override from prop: " + driverOverride);
+                }
                 if (_isRedroid)
                 {
                     Log.Info("DuckGame", "redroid: using default FNA3D driver (Vulkan)");

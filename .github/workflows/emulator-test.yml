@@ -66,6 +66,11 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
             adb install -r "${{ steps.apk.outputs.apk }}"
+            # Default the FNA3D driver to OpenGL for this test: the Vulkan/SDLGPU
+            # path SIGSEGVs ~11s into the render loop on current SDL3+FNA3D.
+            # OpenGL (GLES) is mature and stable on real GPUs; we verify it
+            # renders here. Override with: adb shell setprop duckgame.driver Vulkan
+            adb shell setprop duckgame.driver OpenGL || true
             # Stream logcat to a file in the background so an emulator crash
             # (adb daemon death) doesn't lose the tail.
             adb logcat -v threadtime > logcat.txt &
