@@ -84,7 +84,7 @@ if [ -f "$SCRIPT_DIR/patches/patch_fna3d_capture.py" ]; then
   echo "=== patching FNA3D GPU driver (readback-blit capture) ==="
   python3 "$SCRIPT_DIR/patches/patch_fna3d_capture.py"
 fi
-build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DBUILD_SDL3=ON -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB"
+build_cmake fna3d "$FNA/FNA3D" "-DBUILD_TESTS=OFF -DBUILD_SDL3=ON -DSDL3_DIR=$SDL3_DIR -DSDL3_INCLUDE_DIRS=$SDL3_INCLUDE_DIR -DSDL3_LIBRARIES=$SDL3_LIB -DCMAKE_EXE_LINKER_FLAGS=-llog -DCMAKE_SHARED_LINKER_FLAGS=-llog"
 # ---- Theorafile (Makefile-based; bundle ogg/theora/vorbis) ----
 echo "=== building theorafile (Makefile) ==="
 TF="$FNA/Theorafile"
