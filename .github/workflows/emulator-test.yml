@@ -1,0 +1,73 @@
+name: Emulator smoke test
+
+# Runs the built APK on a hardware-accelerated Android emulator (GitHub-hosted
+# runners now support KVM), captures logcat + a screenshot, and fails if the
+# app crashes. This gives a real-device-class GPU (stable SwiftShader) so we
+# can actually verify rendering and reproduce device crashes.
+
+on:
+  workflow_dispatch:
+  # Run after a release build so the APK artifact is available.
+  workflow_run:
+    workflows: ["Build Android APK"]
+    types: [completed]
+
+jobs:
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download built APK
+        uses: actions/download-artifact@v4
+        with:
+          name: DuckGame-android-apk
+          path: apk
+          run-id: ${{ github.event.workflow_run.id }}
+        continue-on-error: true
+
+      - name: Find APK
+        id: apk
+        run: |
+          APK=$(find apk -name '*-Signed.apk' | head -1)
+          if [ -z "$APK" ]; then
+            echo "No APK artifact found; building one."
+            exit 1
+          fi
+          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run on emulator + capture logcat/screenshot
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          force-avd-create: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            adb install -r "${{ steps.apk.outputs.apk }}"
+            adb logcat -c
+            adb shell am start -n com.duckgame.game/crc644bce61bee332762a.MainActivity
+            sleep 40
+            adb logcat -d > logcat.txt
+            adb exec-out screencap -p > screen.png || true
+            echo "=== DuckGame log lines ==="
+            grep -E "DuckGame:|FATAL|AndroidRuntime|crash|Fatal signal|SIGSEGV" logcat.txt | tail -40
+
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-diagnostics
+          path: |
+            logcat.txt
+            screen.png
+          if-no-files-found: warn

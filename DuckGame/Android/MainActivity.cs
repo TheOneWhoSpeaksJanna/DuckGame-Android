@@ -10,6 +10,36 @@ using Android.Util;
 using Android.Views;
 using SDL3;
 
+// --- On-device fatal crash reporter ---------------------------------------
+// The user has no PC, so crashes can't be read via logcat. This catches
+// unhandled managed exceptions (and, via the default uncaught handler,
+// native/Java crashes that bubble up) and (1) writes them to ducklog.txt
+// and (2) shows them on a TextView overlay so they can be screenshotted and
+// sent back. It does not change game behavior — only surfaces failures.
+namespace DuckGame.Android
+{
+    internal static class CrashBox
+    {
+        internal static MainActivity Host;
+        internal static void Report(string where, Exception ex)
+        {
+            try
+            {
+                string msg = where + ":\n" + (ex?.ToString() ?? "null");
+                try
+                {
+                    string path = System.IO.Path.Combine(
+                        Android.App.Application.Context.FilesDir.AbsolutePath, "ducklog.txt");
+                    System.IO.File.AppendAllText(path, "\n[FATAL " + where + "]\n" + msg + "\n");
+                }
+                catch { }
+                Host?.ShowFatal(msg);
+            }
+            catch { }
+        }
+    }
+}
+
 [assembly: UsesPermission(Android.Manifest.Permission.Internet)]
 [assembly: UsesPermission(Android.Manifest.Permission.AccessNetworkState)]
 [assembly: UsesPermission(Android.Manifest.Permission.Vibrate)]
@@ -48,6 +78,7 @@ namespace DuckGame.Android
         private volatile bool _blitRunning;
         private bool _isRedroid;
         private readonly ManualResetEvent _surfaceReady = new ManualResetEvent(false);
+        private TextView _fatalView;
 
         // redroid is detected at runtime; on it we use the readback-blit path
         // (Canvas View) because its software compositor can't show the SDL
@@ -109,6 +140,36 @@ namespace DuckGame.Android
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
+            CrashBox.Host = this;
+
+            // Surface unhandled crashes on-screen (no PC/logcat available to the
+            // user). ShowFatal draws the message; native crashes also land here
+            // because Android routes the uncaught thread death through this.
+            _fatalView = new TextView(this)
+            {
+                Text = "",
+                TextSize = 12,
+                Typeface = Android.Graphics.Typeface.Monospace,
+                Gravity = GravityFlags.Start
+            };
+            _fatalView.SetTextColor(Android.Graphics.Color.ParseColor("#FF5555"));
+            _fatalView.SetBackgroundColor(Android.Graphics.Color.ParseColor("#FF101010"));
+            _fatalView.Visibility = Android.Views.ViewStates.Gone;
+            AddContentView(_fatalView, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+
+            Java.Lang.Thread.DefaultUncaughtExceptionHandler =
+                new Java.Lang.Thread.IUncaughtExceptionHandler()
+                {
+                    Handle = (thread, thr) =>
+                        CrashBox.Report("uncaught:" + (thread?.Name ?? "?"),
+                            new Exception(thr?.ToString()))
+                };
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                CrashBox.Report("AppDomain", e.ExceptionObject as Exception);
+            Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (s, e) =>
+                CrashBox.Report("AndroidEnvironment", e.Exception);
+
             RequestWindowFeature(WindowFeatures.NoTitle);
 
             // Hide the Android status + navigation bars (immersive sticky) and let the
@@ -346,6 +407,7 @@ namespace DuckGame.Android
             catch (Exception ex)
             {
                 Log.Error("DuckGame", "Game loop exited: " + ex);
+                CrashBox.Report("GameLoop", ex);
             }
             finally
             {
@@ -461,6 +523,23 @@ namespace DuckGame.Android
         {
             // Keep the activity alive; the game handles its own input via FNA.
             MoveTaskToBack(true);
+        }
+
+        // Shows a fatal error on a full-screen TextView so the user (who has no
+        // PC) can screenshot it and send it back. Also kept in ducklog.txt by
+        // CrashBox.Report. The TextView sits on top of everything else.
+        internal void ShowFatal(string message)
+        {
+            try
+            {
+                RunOnUiThread(() =>
+                {
+                    _fatalView.Text = "Duck Game crashed:\n\n" + message +
+                        "\n\n(Open the app's file ducklog.txt and screenshot it, or screenshot this screen, and send it back.)";
+                    _fatalView.Visibility = Android.Views.ViewStates.Visible;
+                });
+            }
+            catch { }
         }
     }
 }
