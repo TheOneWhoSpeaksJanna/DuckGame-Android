@@ -42,10 +42,8 @@ namespace DuckGame.Android
         private const int LOG_ERROR = 6;
         private const string TAG = "DuckGame";
 
-        // The actual native handler (kept as a static delegate so the GC
-        // doesn't collect it while the signal is registered).
-        private static readonly Action<int, IntPtr, IntPtr> Handler = OnSignal;
-
+        // The actual native handler (kept as a static method; its function
+        // pointer is obtained via MethodHandle.GetFunctionPointer()).
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
         private static void OnSignal(int sig, IntPtr info, IntPtr ucontext)
         {
@@ -94,8 +92,11 @@ namespace DuckGame.Android
         {
             try
             {
+                IntPtr fnPtr = typeof(NativeSignalHandler)
+                    .GetMethod("OnSignal", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+                    .MethodHandle.GetFunctionPointer();
                 sigaction act = new sigaction();
-                act.sa_handler = Marshal.GetFunctionPointerForDelegate(Handler);
+                act.sa_handler = fnPtr;
                 act.sa_flags = 0;
                 act.sa_mask = 0;
                 foreach (Signum s in new[] { Signum.SIGSEGV, Signum.SIGBUS, Signum.SIGABRT, Signum.SIGILL, Signum.SIGFPE })
