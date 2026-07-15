@@ -270,25 +270,25 @@ if os.path.exists(OPENGL_SRC):
 else:
     print("SKIP: " + OPENGL_SRC + " (not present)")
 
-# 6. Prove the game loop actually runs (one-shot "first frame" log at the top
-#    of FNA3D_SwapBuffers, which is called once per present by the game loop).
-#    This is build-time diagnostic logging only; it does not alter game logic.
+# 6. Prove the game loop actually runs. FNA3D_Clear is called at the top of
+#    every frame's draw, BEFORE any GPU work — so if it logs, the game loop
+#    is executing (content loaded, Update+Draw running). One-shot log.
 DISP2 = DISP
 if os.path.exists(DISP2):
     patch_file(
         DISP2,
-        "\tTRACE_SWAPBUFFERS\n",
-        "\tTRACE_SWAPBUFFERS\n"
+        "\tTRACE_CLEAR\n",
+        "\tTRACE_CLEAR\n"
         "\t{\n"
         "\t\tstatic int _firstFrameLogged = 0;\n"
         "\t\tif (!_firstFrameLogged) {\n"
         "\t\t\t_firstFrameLogged = 1;\n"
         "\t\t\t__android_log_print(ANDROID_LOG_INFO, \"DuckGame\",\n"
-        "\t\t\t\t\"DuckGame: GAME LOOP RAN — FNA3D_SwapBuffers #1 reached (frame present started)\");\n"
+        "\t\t\t\t\"DuckGame: GAME LOOP RAN — FNA3D_Clear #1 reached (frame Update+Draw executing)\");\n"
         "\t\t}\n"
         "\t}\n",
     )
-    print("OK: " + DISP2 + " + first-frame probe")
+    print("OK: " + DISP2 + " + loop probe")
 else:
     print("SKIP: " + DISP2 + " (not present)")
 
