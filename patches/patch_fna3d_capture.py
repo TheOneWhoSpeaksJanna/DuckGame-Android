@@ -21,10 +21,13 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, "..", "FNA", "lib", "FNA3D", "src", "FNA3D_Driver_SDL.c")
 SRC = os.path.abspath(SRC)
 
-def patch_file(path, old, new):
+def patch_file(path, old, new, count=1):
     s = io.open(path, encoding="utf-8").read()
     assert old in s, "anchor not found:\n" + repr(old[:120])
-    s = s.replace(old, new, 1)
+    if count <= 0:
+        s = s.replace(old, new)  # replace all
+    else:
+        s = s.replace(old, new, count)
     io.open(path, "w", encoding="utf-8").write(s)
 
 if not os.path.exists(SRC):
@@ -141,6 +144,13 @@ if os.path.exists(DISP):
     DLOG = '#include <android/log.h>\n'
     if DLOG not in io.open(DISP, encoding="utf-8").read():
         patch_file(DISP, "#include <SDL3/SDL.h>\n", "#include <SDL3/SDL.h>\n" + DLOG)
+    # FNA3D_PrepareWindowAttributes probe (called by GraphicsDevice ctor).
+    patch_file(
+        DISP,
+        "uint32_t FNA3D_PrepareWindowAttributes(void)\n{\n",
+        "uint32_t FNA3D_PrepareWindowAttributes(void)\n{\n"
+        "\t__android_log_print(ANDROID_LOG_INFO, \"DuckGame\", \"FNA3D_PrepareWindowAttributes called\");\n",
+    )
     # FNA3D_SwapBuffers dispatcher probe.
     patch_file(
         DISP,
@@ -167,3 +177,81 @@ else:
     print("SKIP: " + DISP + " (not present)")
 
 print("OK: " + SRC)
+
+# 4. OpenGL driver readback capture (used on redroid, where the Vulkan HAL
+#    segfaults during device init and we force FNA3D_FORCE_DRIVER=OpenGL).
+#    The SDLGPU capture (section 1-2) is inert in that case, so mirror the
+#    same bridge here and grab the final frame via glReadPixels from the
+#    real backbuffer FBO before the GL swap.
+OPENGL_SRC = os.path.join(ROOT, "..", "FNA", "lib", "FNA3D", "src", "FNA3D_Driver_OpenGL.c")
+OPENGL_SRC = os.path.abspath(OPENGL_SRC)
+if os.path.exists(OPENGL_SRC):
+    ohead = io.open(OPENGL_SRC, encoding="utf-8").read()
+    if "#include <android/log.h>" not in ohead:
+        patch_file(OPENGL_SRC, "#include <SDL3/SDL.h>\n", "#include <SDL3/SDL.h>\n#include <android/log.h>\n")
+
+    OPENGL_GLOBALS = (
+        "/* DuckGame-Android: readback-blit shared capture buffer + bridge "
+        "(OpenGL driver). */\n"
+        "static unsigned char *g_DuckGamePixels = NULL;\n"
+        "static int g_DuckGameW = 0;\n"
+        "static int g_DuckGameH = 0;\n"
+        "static int g_DuckGameCapture = 0;\n\n"
+        "__attribute__((visibility(\"default\"), used))\n"
+        "void DuckGame_SetCapture(int enabled)\n"
+        "{\n"
+        "    g_DuckGameCapture = enabled;\n"
+        "}\n\n"
+        "__attribute__((visibility(\"default\"), used))\n"
+        "int DuckGame_LockPixels(int *w, int *h, unsigned char **pixels)\n"
+        "{\n"
+        "    if (!g_DuckGameCapture || !g_DuckGamePixels) {\n"
+        "        return 0;\n"
+        "    }\n"
+        "    *w = g_DuckGameW;\n"
+        "    *h = g_DuckGameH;\n"
+        "    *pixels = g_DuckGamePixels;\n"
+        "    return 1;\n"
+        "}\n\n"
+    )
+    # Insert the globals just before the first OPENGL_ function (OPENGL_SwapBuffers).
+    patch_file(
+        OPENGL_SRC,
+        "static void OPENGL_SwapBuffers(\n",
+        OPENGL_GLOBALS + "static void OPENGL_SwapBuffers(\n",
+    )
+
+    # Capture the final frame from the real backbuffer FBO right before each
+    # GL swap (the image lives there after the blit-to-backbuffer step).
+    OPENGL_CAPTURE = (
+        "    /* DuckGame-Android: readback-blit capture of the final frame (OpenGL). */\n"
+        "    if (g_DuckGameCapture) {\n"
+        "        int cw = renderer->backbuffer->width;\n"
+        "        int ch = renderer->backbuffer->height;\n"
+        "        if (cw > 0 && ch > 0) {\n"
+        "            size_t need = (size_t) cw * (size_t) ch * 4;\n"
+        "            if (!g_DuckGamePixels || g_DuckGameW != cw || g_DuckGameH != ch) {\n"
+        "                if (g_DuckGamePixels) SDL_free(g_DuckGamePixels);\n"
+        "                g_DuckGamePixels = (unsigned char*) SDL_malloc(need);\n"
+        "                g_DuckGameW = cw; g_DuckGameH = ch;\n"
+        "            }\n"
+        "            if (g_DuckGamePixels) {\n"
+        "                renderer->glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->realBackbufferFBO);\n"
+        "                renderer->glPixelStorei(GL_PACK_ALIGNMENT, 1);\n"
+        "                renderer->glReadPixels(0, 0, cw, ch, GL_RGBA, GL_UNSIGNED_BYTE, g_DuckGamePixels);\n"
+        "                renderer->currentReadFramebuffer = renderer->realBackbufferFBO;\n"
+        "            }\n"
+        "        }\n"
+        "    }\n"
+    )
+    # Both SDL_GL_SwapWindow calls (OPENGL-type branch and the bare else).
+    patch_file(
+        OPENGL_SRC,
+        "\tSDL_GL_SwapWindow((SDL_Window*) overrideWindowHandle);\n",
+        OPENGL_CAPTURE + "\tSDL_GL_SwapWindow((SDL_Window*) overrideWindowHandle);\n",
+        count=0,
+    )
+    print("OK: " + OPENGL_SRC)
+else:
+    print("SKIP: " + OPENGL_SRC + " (not present)")
+
