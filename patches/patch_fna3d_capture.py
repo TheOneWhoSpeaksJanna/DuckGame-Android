@@ -124,4 +124,27 @@ patch_file(
     "\tSDLGPU_INTERNAL_FlushCommands(renderer);\n" + CAPTURE,
 )
 
+# 3. Probe the FNA3D_SwapBuffers dispatcher (FNA3D.c) to confirm the game
+#    actually requests a present, and which driver is active.
+DISP = os.path.join(ROOT, "..", "FNA", "lib", "FNA3D", "src", "FNA3D.c")
+DISP = os.path.abspath(DISP)
+if os.path.exists(DISP):
+    DISP_ANCHOR = "\tTRACE_SWAPBUFFERS\n"
+    DISP_INSERT = (
+        "\tTRACE_SWAPBUFFERS\n"
+        "\tSDL_Log(SDL_LOG_CATEGORY_APPLICATION, \"DuckGame: FNA3D_SwapBuffers called; driver=%s\",\n"
+        "\t\t(device && device->Name) ? device->Name : \"NULL\");\n"
+    )
+    patch_file(DISP, DISP_ANCHOR, DISP_INSERT)
+    # Probe GPU device creation success in the SDL driver.
+    DEV_ANCHOR = "\trenderer->device = device;\n"
+    DEV_INSERT = (
+        "\trenderer->device = device;\n"
+        "\tSDL_Log(SDL_LOG_CATEGORY_APPLICATION, \"DuckGame: SDLGPU device created OK\");\n"
+    )
+    patch_file(SRC, DEV_ANCHOR, DEV_INSERT)
+    print("OK: " + DISP + " + device probe")
+else:
+    print("SKIP: " + DISP + " (not present)")
+
 print("OK: " + SRC)
