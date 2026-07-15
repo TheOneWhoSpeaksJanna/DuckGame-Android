@@ -40,13 +40,17 @@ if HAVE_LOG not in io.open(SRC, encoding="utf-8").read():
     patch_file(SRC, "#include <SDL3/SDL.h>\n", "#include <SDL3/SDL.h>\n" + HAVE_LOG)
 
 # 1. Globals + exported capture bridge, inserted just before SDLGPU_SwapBuffers.
+#    These are library-global (NOT static) so the OpenGL driver TU (which also
+#    captures when FNA3D_FORCE_DRIVER=OpenGL is set) can reference them via
+#    extern instead of redefining the bridge (which would cause duplicate
+#    symbols at link time).
 GLOBALS = r'''/* DuckGame-Android: readback-blit shared capture buffer + bridge. */
 #include <SDL3/SDL_gpu.h>
 #include <android/log.h>
-static unsigned char *g_DuckGamePixels = NULL;
-static int g_DuckGameW = 0;
-static int g_DuckGameH = 0;
-static int g_DuckGameCapture = 0;
+unsigned char *g_DuckGamePixels = NULL;
+int g_DuckGameW = 0;
+int g_DuckGameH = 0;
+int g_DuckGameCapture = 0;
 
 __attribute__((visibility("default"), used))
 void DuckGame_SetCapture(int enabled)
@@ -191,28 +195,12 @@ if os.path.exists(OPENGL_SRC):
         patch_file(OPENGL_SRC, "#include <SDL3/SDL.h>\n", "#include <SDL3/SDL.h>\n#include <android/log.h>\n")
 
     OPENGL_GLOBALS = (
-        "/* DuckGame-Android: readback-blit shared capture buffer + bridge "
-        "(OpenGL driver). */\n"
-        "static unsigned char *g_DuckGamePixels = NULL;\n"
-        "static int g_DuckGameW = 0;\n"
-        "static int g_DuckGameH = 0;\n"
-        "static int g_DuckGameCapture = 0;\n\n"
-        "__attribute__((visibility(\"default\"), used))\n"
-        "void DuckGame_SetCapture(int enabled)\n"
-        "{\n"
-        "    g_DuckGameCapture = enabled;\n"
-        "}\n\n"
-        "__attribute__((visibility(\"default\"), used))\n"
-        "int DuckGame_LockPixels(int *w, int *h, unsigned char **pixels)\n"
-        "{\n"
-        "    if (!g_DuckGameCapture || !g_DuckGamePixels) {\n"
-        "        return 0;\n"
-        "    }\n"
-        "    *w = g_DuckGameW;\n"
-        "    *h = g_DuckGameH;\n"
-        "    *pixels = g_DuckGamePixels;\n"
-        "    return 1;\n"
-        "}\n\n"
+        "/* DuckGame-Android: readback-blit capture bridge is defined in the "
+        "SDLGPU driver TU; reference it via extern (no redefinition). */\n"
+        "extern unsigned char *g_DuckGamePixels;\n"
+        "extern int g_DuckGameW;\n"
+        "extern int g_DuckGameH;\n"
+        "extern int g_DuckGameCapture;\n\n"
     )
     # Insert the globals just before the first OPENGL_ function (OPENGL_SwapBuffers).
     patch_file(
