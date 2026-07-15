@@ -71,10 +71,13 @@ jobs:
             # OpenGL (GLES) is mature and stable on real GPUs; we verify it
             # renders here. Override with: adb shell setprop duckgame.driver Vulkan
             adb shell setprop duckgame.driver OpenGL || true
-            # Stream logcat to a file in the background so an emulator crash
-            # (adb daemon death) doesn't lose the tail.
+            # Stream logcat (main + crash buffers) to files so we capture the
+            # debuggerd backtrace even if the process dies (adb daemon death
+            # or signal revert doesn't lose the tail).
             adb logcat -v threadtime > logcat.txt &
             LOGCAT_PID=$!
+            adb logcat -b crash -v threadtime > crashlog.txt &
+            CRASHLOG_PID=$!
             adb shell am start -n com.duckgame.game/crc644bce61bee332762a.MainActivity
             sleep 50
             adb exec-out screencap -p > screen_early.png || true
@@ -85,6 +88,7 @@ jobs:
             # Capture native tombstone backtrace (avoids adb root/pull quirks).
             adb shell "ls -la /data/tombstones/ 2>&1; for t in /data/tombstones/tombstone_*; do echo === \$t ===; cat \$t; done" > tombstones.txt 2>&1 || true
             kill $LOGCAT_PID 2>/dev/null || true
+            kill $CRASHLOG_PID 2>/dev/null || true
             echo "=== DuckGame / crash lines ==="
             grep -E "DuckGame:|FATAL|AndroidRuntime|crash|Fatal signal|SIGSEGV|Exception|SDL|CRASH" logcat.txt | tail -80
             echo "=== process alive? ==="
@@ -97,6 +101,7 @@ jobs:
           name: emulator-diagnostics
           path: |
             logcat.txt
+            crashlog.txt
             screen_early.png
             screen_late.png
             ducklog.txt
