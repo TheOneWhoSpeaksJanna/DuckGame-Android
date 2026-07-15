@@ -389,6 +389,9 @@ patch_file(
     /* DuckGame-Android: keep the native bridge symbols linked (reachable
        from this exported JNI_OnLoad). They are also listed in the version
        script's global: block so they export from the shared lib. */
+    /* Forward declaration so JNI_OnLoad can reference the resume bridge
+       defined later in this file. */
+    void SDL_AndroidSendResume(void);
     SDL_AndroidInitNative();
     (void)SDL_AndroidSetNativeWindow;
     (void)SDL_AndroidSetNativeWindowFromSurface;
