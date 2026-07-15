@@ -180,6 +180,22 @@ if os.path.exists(DISP):
 else:
     print("SKIP: " + DISP + " (not present)")
 
+# 5. Disable MojoShader's JIT compiler. On redroid the JIT emits code into
+#    anonymous executable memory that crashes (SIGSEGV in <anonymous>) during
+#    device init / first shader compile. The interpreter path is slower but
+#    stable and avoids the JIT entirely. This is a build-config flag, not a
+#    change to game logic.
+CMAKE = os.path.join(ROOT, "..", "FNA", "lib", "FNA3D", "CMakeLists.txt")
+CMAKE = os.path.abspath(CMAKE)
+if os.path.exists(CMAKE):
+    patch_file(
+        CMAKE,
+        "\t-DMOJOSHADER_NO_VERSION_INCLUDE\n",
+        "\t-DMOJOSHADER_NO_VERSION_INCLUDE\n"
+        "\t-DMOJOSHADER_NO_JIT\n",
+    )
+    print("OK: " + CMAKE + " (MOJOSHADER_NO_JIT)")
+
 print("OK: " + SRC)
 
 # 4. OpenGL driver readback capture (used on redroid, where the Vulkan HAL
