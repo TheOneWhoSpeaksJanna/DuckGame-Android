@@ -111,6 +111,7 @@ namespace DuckGame.Android
         {
             base.OnCreate(savedInstanceState);
             CrashBox.Host = this;
+            NativeSignalHandler.Install();
 
             // Surface unhandled crashes on-screen (no PC/logcat available to the
             // user). ShowFatal draws the message; native crashes also land here
