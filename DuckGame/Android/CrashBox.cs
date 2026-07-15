@@ -5,7 +5,7 @@ namespace DuckGame.Android
 {
     // Routes uncaught thread deaths (including native/Java crashes that bubble
     // up to the default handler) to CrashBox so they can be shown on screen.
-    internal class CrashHandler : Java.Lang.Thread.IUncaughtExceptionHandler
+    internal class CrashHandler : Java.Lang.Object, Java.Lang.Thread.IUncaughtExceptionHandler
     {
         public void UncaughtException(Java.Lang.Thread thread, Java.Lang.Throwable thr)
         {
