@@ -67,49 +67,50 @@ patch_file(
 CAPTURE = r'''    /* DuckGame-Android: readback-blit capture of the final frame. */
     if (g_DuckGameCapture) {
         SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: SDLGPU_SwapBuffers capture reached; fb=%p", (void*)renderer->fauxBackbufferColorTexture);
-    if (renderer->fauxBackbufferColorTexture != NULL) {
-        int cw = (int) renderer->fauxBackbufferColorTexture->createInfo.width;
-        int ch = (int) renderer->fauxBackbufferColorTexture->createInfo.height;
-        if (cw > 0 && ch > 0) {
-            size_t need = (size_t) cw * (size_t) ch * 4;
-            if (!g_DuckGamePixels || g_DuckGameW != cw || g_DuckGameH != ch) {
-                if (g_DuckGamePixels) SDL_free(g_DuckGamePixels);
-                g_DuckGamePixels = (unsigned char *) SDL_malloc(need);
-                g_DuckGameW = cw;
-                g_DuckGameH = ch;
-                SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture alloc %dx%d (%zu bytes) ptr=%p", cw, ch, need, (void*)g_DuckGamePixels);
-            }
-            if (g_DuckGamePixels) {
-                SDL_GPUTransferBuffer *tb = SDL_CreateGPUTransferBuffer(
-                    renderer->device,
-                    &(SDL_GPUTransferBufferCreateInfo){
-                        SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD,
-                        (Uint32) need
+        if (renderer->fauxBackbufferColorTexture != NULL) {
+            int cw = (int) renderer->fauxBackbufferColorTexture->createInfo.width;
+            int ch = (int) renderer->fauxBackbufferColorTexture->createInfo.height;
+            if (cw > 0 && ch > 0) {
+                size_t need = (size_t) cw * (size_t) ch * 4;
+                if (!g_DuckGamePixels || g_DuckGameW != cw || g_DuckGameH != ch) {
+                    if (g_DuckGamePixels) SDL_free(g_DuckGamePixels);
+                    g_DuckGamePixels = (unsigned char *) SDL_malloc(need);
+                    g_DuckGameW = cw;
+                    g_DuckGameH = ch;
+                    SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture alloc %dx%d (%zu bytes) ptr=%p", cw, ch, need, (void*)g_DuckGamePixels);
+                }
+                if (g_DuckGamePixels) {
+                    SDL_GPUTransferBuffer *tb = SDL_CreateGPUTransferBuffer(
+                        renderer->device,
+                        &(SDL_GPUTransferBufferCreateInfo){
+                            SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD,
+                            (Uint32) need
+                        }
+                    );
+                    SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture tb=%p", (void*)tb);
+                    if (tb != NULL) {
+                        SDL_GPUCommandBuffer *dl = SDL_AcquireGPUCommandBuffer(renderer->device);
+                        if (dl != NULL) {
+                            SDL_GPUCopyPass *cp = SDL_BeginGPUCopyPass(dl);
+                            SDL_GPUTextureRegion reg = {
+                                renderer->fauxBackbufferColorTexture->texture,
+                                0, 0, 0, 0, 0, (Uint32) cw, (Uint32) ch, 1
+                            };
+                            SDL_GPUTextureTransferInfo ti = { tb, 0, (Uint32) cw, (Uint32) ch };
+                            SDL_DownloadFromGPUTexture(cp, &reg, &ti);
+                            SDL_EndGPUCopyPass(cp);
+                            SDL_SubmitGPUCommandBuffer(dl);
+                            SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture download submitted");
+                        }
+                        SDL_WaitForGPUIdle(renderer->device);
+                        void *mapped = SDL_MapGPUTransferBuffer(renderer->device, tb, false);
+                        SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture mapped=%p", mapped);
+                        if (mapped != NULL) {
+                            SDL_memcpy(g_DuckGamePixels, mapped, need);
+                            SDL_UnmapGPUTransferBuffer(renderer->device, tb);
+                        }
+                        SDL_ReleaseGPUTransferBuffer(renderer->device, tb);
                     }
-                );
-                SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture tb=%p", (void*)tb);
-                if (tb != NULL) {
-                    SDL_GPUCommandBuffer *dl = SDL_AcquireGPUCommandBuffer(renderer->device);
-                    if (dl != NULL) {
-                        SDL_GPUCopyPass *cp = SDL_BeginGPUCopyPass(dl);
-                        SDL_GPUTextureRegion reg = {
-                            renderer->fauxBackbufferColorTexture->texture,
-                            0, 0, 0, 0, 0, (Uint32) cw, (Uint32) ch, 1
-                        };
-                        SDL_GPUTextureTransferInfo ti = { tb, 0, (Uint32) cw, (Uint32) ch };
-                        SDL_DownloadFromGPUTexture(cp, &reg, &ti);
-                        SDL_EndGPUCopyPass(cp);
-                        SDL_SubmitGPUCommandBuffer(dl);
-                        SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture download submitted");
-                    }
-                    SDL_WaitForGPUIdle(renderer->device);
-                    void *mapped = SDL_MapGPUTransferBuffer(renderer->device, tb, false);
-                    SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture mapped=%p", mapped);
-                    if (mapped != NULL) {
-                        SDL_memcpy(g_DuckGamePixels, mapped, need);
-                        SDL_UnmapGPUTransferBuffer(renderer->device, tb);
-                    }
-                    SDL_ReleaseGPUTransferBuffer(renderer->device, tb);
                 }
             }
         }
