@@ -222,7 +222,10 @@ if os.path.exists(OPENGL_SRC):
     )
 
     # Capture the final frame from the real backbuffer FBO right before each
-    # GL swap (the image lives there after the blit-to-backbuffer step).
+    # GL swap inside OPENGL_SwapBuffers (the image lives there after the
+    # blit-to-backbuffer step). We anchor on the unique trailing context of
+    # the two SDL_GL_SwapWindow calls inside OPENGL_SwapBuffers so we don't
+    # touch the other SDL_GL_SwapWindow callers elsewhere in the file.
     OPENGL_CAPTURE = (
         "    /* DuckGame-Android: readback-blit capture of the final frame (OpenGL). */\n"
         "    if (g_DuckGameCapture) {\n"
@@ -237,19 +240,27 @@ if os.path.exists(OPENGL_SRC):
         "            }\n"
         "            if (g_DuckGamePixels) {\n"
         "                renderer->glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->realBackbufferFBO);\n"
-        "                renderer->glPixelStorei(GL_PACK_ALIGNMENT, 1);\n"
         "                renderer->glReadPixels(0, 0, cw, ch, GL_RGBA, GL_UNSIGNED_BYTE, g_DuckGamePixels);\n"
         "                renderer->currentReadFramebuffer = renderer->realBackbufferFBO;\n"
         "            }\n"
         "        }\n"
         "    }\n"
     )
-    # Both SDL_GL_SwapWindow calls (OPENGL-type branch and the bare else).
     patch_file(
         OPENGL_SRC,
-        "\tSDL_GL_SwapWindow((SDL_Window*) overrideWindowHandle);\n",
-        OPENGL_CAPTURE + "\tSDL_GL_SwapWindow((SDL_Window*) overrideWindowHandle);\n",
-        count=0,
+        "\tSDL_GL_SwapWindow((SDL_Window*) overrideWindowHandle);\n\n"
+        "\t\tBindFramebuffer(renderer, renderer->backbuffer->opengl.handle);\n",
+        OPENGL_CAPTURE
+        + "\tSDL_GL_SwapWindow((SDL_Window*) overrideWindowHandle);\n\n"
+        "\t\tBindFramebuffer(renderer, renderer->backbuffer->opengl.handle);\n",
+    )
+    patch_file(
+        OPENGL_SRC,
+        "\tSDL_GL_SwapWindow((SDL_Window*) overrideWindowHandle);\n\t}\n\n"
+        "\t/* Run any threaded commands */\n",
+        OPENGL_CAPTURE
+        + "\tSDL_GL_SwapWindow((SDL_Window*) overrideWindowHandle);\n\t}\n\n"
+        "\t/* Run any threaded commands */\n",
     )
     print("OK: " + OPENGL_SRC)
 else:
