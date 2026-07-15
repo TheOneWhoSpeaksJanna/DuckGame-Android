@@ -377,6 +377,25 @@ namespace DuckGame.Android
             }
         }
 
+        // Re-apply the immersive / full-bleed (notch) flags whenever the window
+        // regains focus. SDL and the system can clear immersive mode when they
+        // grab input focus, which would pop the nav/status bars back over the
+        // game; restoring here keeps it permanently fullscreen + notch-ignoring.
+        public override void OnWindowFocusChanged(bool hasFocus)
+        {
+            base.OnWindowFocusChanged(hasFocus);
+            if (!hasFocus || Build.VERSION.SdkInt < BuildVersionCodes.Kitkat)
+                return;
+            Window.DecorView.SystemUiVisibility = (StatusBarVisibility)(
+                (int)global::Android.Views.SystemUiFlags.HideNavigation |
+                (int)global::Android.Views.SystemUiFlags.Fullscreen |
+                (int)global::Android.Views.SystemUiFlags.ImmersiveSticky |
+                (int)global::Android.Views.SystemUiFlags.LayoutHideNavigation |
+                (int)global::Android.Views.SystemUiFlags.LayoutFullscreen);
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.P)
+                Window.Attributes.LayoutInDisplayCutoutMode = global::Android.Views.LayoutInDisplayCutoutMode.ShortEdges;
+        }
+
         // ISurfaceHolderCallback: the native window is ready here (UI thread).
         public void SurfaceCreated(ISurfaceHolder holder)
         {
