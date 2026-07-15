@@ -257,36 +257,15 @@ patch_file(
 )
 
 # ---------------------------------------------------------------------------
-# 4. video/android/SDL_androidevents.c : non-blocking WaitActiveAndLockActivity
-# ---------------------------------------------------------------------------
+# 4. video/android/SDL_androidevents.c : add <android/log.h> for diagnostics.
+#    (The WaitActiveAndLockActivity blocking behavior is kept as-is so we can
+#     measure whether our resume event unblocks it; once confirmed we'll make
+#     it a no-op.)
 EVENTS_C = "src/video/android/SDL_androidevents.c"
 patch_file(
     EVENTS_C,
-    """bool Android_WaitActiveAndLockActivity(void)
-{
-    while (Android_Paused && !Android_Destroyed) {
-        Android_PumpEvents(-1);
-    }
-
-    if (Android_Destroyed) {
-        SDL_SetError("Android activity has been destroyed");
-        return false;
-    }
-
-    Android_LockActivityMutex();
-    return true;
-}""",
-    """bool Android_WaitActiveAndLockActivity(void)
-{
-    /* DuckGame-Android: there is no Java activity lifecycle to wait on. */
-    if (Android_Destroyed) {
-        SDL_SetError("Android activity has been destroyed");
-        return false;
-    }
-
-    Android_LockActivityMutex();
-    return true;
-}""",
+    "#include \"SDL_androidevents.h\"",
+    "#include \"SDL_androidevents.h\"\n#include <android/log.h>",
 )
 
 # ---------------------------------------------------------------------------
@@ -358,6 +337,18 @@ else:
 #     surface is ready.
 patch_file(
     ANDROID_C,
+    "void Android_SendLifecycleEvent(SDL_AndroidLifecycleEvent event)\n{\n    SDL_LockMutex(Android_LifecycleMutex);",
+    "void Android_SendLifecycleEvent(SDL_AndroidLifecycleEvent event)\n{\n    __android_log_print(ANDROID_LOG_ERROR, \"DuckGame\", \"sendLifecycle event=%d num=%d\", (int)event, Android_NumLifecycleEvents);\n    SDL_LockMutex(Android_LifecycleMutex);",
+)
+
+# 8b. Exported bridge to send SDL's Android RESUME lifecycle event from the
+#     managed host. Under .NET Android, SDL's Java SDLActivity (which normally
+#     calls nativeResume -> Android_SendLifecycleEvent(RESUME)) never runs, so
+#     the event pump blocks forever in Android_WaitActiveAndLockActivity waiting
+#     for a resume that never comes. We expose a C wrapper and call it once the
+#     surface is ready.
+patch_file(
+    ANDROID_C,
     "    Android_SendLifecycleEvent(SDL_ANDROID_LIFECYCLE_RESUME);\n"
     "}\n\n"
     "JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(nativeFocusChanged)(\n",
@@ -368,13 +359,23 @@ patch_file(
     "__attribute__((visibility(\"default\"), used))\n"
     "void SDL_AndroidSendResume(void)\n"
     "{\n"
+    "    __android_log_print(ANDROID_LOG_ERROR, \"DuckGame\", \"SDL_AndroidSendResume called\");\n"
     "    Android_SendLifecycleEvent(SDL_ANDROID_LIFECYCLE_RESUME);\n"
     "}\n\n"
     "JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(nativeFocusChanged)(\n",
 )
 
-# Keep the new bridge retained + exported by referencing it from JNI_OnLoad
-# (done in step 8 below, which adds the (void)SDL_AndroidSendResume; reference).
+# Diagnostic: log when OnResume flips paused, and when WaitActive is entered/exited.
+patch_file(
+    "src/video/android/SDL_androidevents.c",
+    "static void Android_OnResume(void)\n{\n    Android_Paused = false;",
+    "static void Android_OnResume(void)\n{\n    __android_log_print(ANDROID_LOG_ERROR, \"DuckGame\", \"Android_OnResume paused=%d\", (int)Android_Paused);\n    Android_Paused = false;",
+)
+patch_file(
+    "src/video/android/SDL_androidevents.c",
+    "bool Android_WaitActiveAndLockActivity(void)\n{\n    while (Android_Paused && !Android_Destroyed) {\n        Android_PumpEvents(-1);\n    }",
+    "bool Android_WaitActiveAndLockActivity(void)\n{\n    __android_log_print(ANDROID_LOG_ERROR, \"DuckGame\", \"WaitActive ENTER paused=%d destroyed=%d\", (int)Android_Paused, (int)Android_Destroyed);\n    while (Android_Paused && !Android_Destroyed) {\n        Android_PumpEvents(-1);\n    }\n    __android_log_print(ANDROID_LOG_ERROR, \"DuckGame\", \"WaitActive EXIT paused=%d destroyed=%d\", (int)Android_Paused, (int)Android_Destroyed);",
+)
 #    cluster to be retained + exported by referencing all four from it: the
 #    linker keeps everything reachable from an exported symbol, so they
 #    survive --gc-sections and the version script promotes them to dynamic.
