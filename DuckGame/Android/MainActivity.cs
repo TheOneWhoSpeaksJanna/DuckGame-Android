@@ -115,29 +115,25 @@ namespace DuckGame.Android
             // Surface unhandled crashes on-screen (no PC/logcat available to the
             // user). ShowFatal draws the message; native crashes also land here
             // because Android routes the uncaught thread death through this.
-            _fatalView = new TextView(this)
+            _fatalView = new global::Android.Widget.TextView(this)
             {
                 Text = "",
                 TextSize = 12,
-                Typeface = Android.Graphics.Typeface.Monospace,
-                Gravity = GravityFlags.Start
+                Typeface = global::Android.Graphics.Typeface.Monospace,
+                Gravity = global::Android.Views.GravityFlags.Start
             };
-            _fatalView.SetTextColor(Android.Graphics.Color.ParseColor("#FF5555"));
-            _fatalView.SetBackgroundColor(Android.Graphics.Color.ParseColor("#FF101010"));
-            _fatalView.Visibility = Android.Views.ViewStates.Gone;
-            AddContentView(_fatalView, new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            _fatalView.SetTextColor(global::Android.Graphics.Color.ParseColor("#FF5555"));
+            _fatalView.SetBackgroundColor(global::Android.Graphics.Color.ParseColor("#FF101010"));
+            _fatalView.Visibility = global::Android.Views.ViewStates.Gone;
+            AddContentView(_fatalView, new global::Android.Views.ViewGroup.LayoutParams(
+                global::Android.Views.ViewGroup.LayoutParams.MatchParent,
+                global::Android.Views.ViewGroup.LayoutParams.MatchParent));
 
             Java.Lang.Thread.DefaultUncaughtExceptionHandler =
-                new Java.Lang.Thread.IUncaughtExceptionHandler()
-                {
-                    Handle = (thread, thr) =>
-                        CrashBox.Report("uncaught:" + (thread?.Name ?? "?"),
-                            new Exception(thr?.ToString()))
-                };
+                new CrashHandler();
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
                 CrashBox.Report("AppDomain", e.ExceptionObject as Exception);
-            Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (s, e) =>
+            global::Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (s, e) =>
                 CrashBox.Report("AndroidEnvironment", e.Exception);
 
             RequestWindowFeature(WindowFeatures.NoTitle);
@@ -506,7 +502,7 @@ namespace DuckGame.Android
                 {
                     _fatalView.Text = "Duck Game crashed:\n\n" + message +
                         "\n\n(Open the app's file ducklog.txt and screenshot it, or screenshot this screen, and send it back.)";
-                    _fatalView.Visibility = Android.Views.ViewStates.Visible;
+                    _fatalView.Visibility = global::Android.Views.ViewStates.Visible;
                 });
             }
             catch { }

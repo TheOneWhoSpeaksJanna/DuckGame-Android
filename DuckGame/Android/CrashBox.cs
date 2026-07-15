@@ -3,6 +3,16 @@ using Android.App;
 
 namespace DuckGame.Android
 {
+    // Routes uncaught thread deaths (including native/Java crashes that bubble
+    // up to the default handler) to CrashBox so they can be shown on screen.
+    internal class CrashHandler : Java.Lang.Thread.IUncaughtExceptionHandler
+    {
+        public void UncaughtException(Java.Lang.Thread thread, Java.Lang.Throwable thr)
+        {
+            CrashBox.Report("uncaught:" + (thread?.Name ?? "?"), new Exception(thr?.ToString()));
+        }
+    }
+
     // On-device fatal crash reporter. The user has no PC, so crashes can't be
     // read via logcat. This catches unhandled managed exceptions (and, via the
     // default uncaught handler, native/Java crashes that bubble up) and (1)
