@@ -1,6 +1,6 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Mono.Runtime;
 
 namespace DuckGame.Android
 {
@@ -46,7 +46,7 @@ namespace DuckGame.Android
         // doesn't collect it while the signal is registered).
         private static readonly Action<int, IntPtr, IntPtr> Handler = OnSignal;
 
-        [MonoPInvokeCallback(typeof(Action<int, IntPtr, IntPtr>))]
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
         private static void OnSignal(int sig, IntPtr info, IntPtr ucontext)
         {
             try
