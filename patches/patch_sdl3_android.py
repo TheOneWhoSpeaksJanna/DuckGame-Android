@@ -372,13 +372,8 @@ patch_file(
     "JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(nativeFocusChanged)(\n",
 )
 
-# Keep the new bridge retained + exported by referencing it from JNI_OnLoad.
-patch_file(
-    ANDROID_C,
-    "    (void)SDL_AndroidSetScreenResolution;\n",
-    "    (void)SDL_AndroidSetScreenResolution;\n    (void)SDL_AndroidSendResume;\n",
-)
-
+# Keep the new bridge retained + exported by referencing it from JNI_OnLoad
+# (done in step 8 below, which adds the (void)SDL_AndroidSendResume; reference).
 #    cluster to be retained + exported by referencing all four from it: the
 #    linker keeps everything reachable from an exported symbol, so they
 #    survive --gc-sections and the version script promotes them to dynamic.
@@ -398,6 +393,7 @@ patch_file(
     (void)SDL_AndroidSetNativeWindow;
     (void)SDL_AndroidSetNativeWindowFromSurface;
     (void)SDL_AndroidSetScreenResolution;
+    (void)SDL_AndroidSendResume;
     /* Also keep the readback-blit capture symbols (defined in SDL_androidgl.c)
        linked + exported. Declared here so this TU compiles. */
     extern void SDL_DuckGameSetCapture(int);
