@@ -308,15 +308,13 @@ namespace DuckGame.Android
                 // Force SDL's Android video driver (FNA's desktop path might
                 // otherwise pick a non-Android driver on .NET Android).
                 SDL.SDL_SetHint("SDL_VIDEODRIVER", "android");
-                // On redroid the Vulkan HAL (vulkan.pastel.so) segfaults during
-                // device init, so force FNA3D's OpenGL driver (redroid's GLES
-                // swiftshader is stable). Real devices keep the default SDLGPU
-                // (Vulkan) path for best performance.
-                if (_isRedroid)
-                {
-                    SDL.SDL_SetHint("FNA3D_FORCE_DRIVER", "OpenGL");
-                    Log.Info("DuckGame", "redroid: forcing FNA3D OpenGL driver");
-                }
+                // On redroid the default Vulkan HAL (vulkan.pastel.so) segfaults
+                // during device init, so we override ro.hardware.vulkan=lvp at
+                // the container level to use Lavapipe (Mesa software Vulkan),
+                // which is stable. We therefore keep FNA3D's default SDLGPU
+                // (Vulkan) driver here. (Earlier builds forced the OpenGL
+                // driver, but swiftshader's GL JIT also crashed on redroid.)
+                // Real devices keep the native Vulkan path unchanged.
                 // On redroid we capture the final GPU frame via the patched
                 // FNA3D SDL3-GPU driver (DuckGame_SetCapture) and mirror
                 // it onto a Canvas View, because redroid's software
