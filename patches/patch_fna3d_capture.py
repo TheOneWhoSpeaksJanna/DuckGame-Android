@@ -11,6 +11,9 @@
 #
 # On real devices g_DuckGameCapture stays 0, so there is zero overhead
 # and the native SurfaceView path is used unchanged.
+#
+# Diagnostics use __android_log_print (reaches logcat on Android), NOT
+# SDL_Log (which is not routed to logcat in this SDL3 Android build).
 
 import io, os, sys
 
@@ -28,9 +31,15 @@ if not os.path.exists(SRC):
     print("SKIP: " + SRC + " (not present)")
     sys.exit(0)
 
+# Make sure android/log.h is available for diagnostics in this TU.
+HAVE_LOG = '#include <android/log.h>\n'
+if HAVE_LOG not in io.open(SRC, encoding="utf-8").read():
+    patch_file(SRC, "#include <SDL3/SDL.h>\n", "#include <SDL3/SDL.h>\n" + HAVE_LOG)
+
 # 1. Globals + exported capture bridge, inserted just before SDLGPU_SwapBuffers.
 GLOBALS = r'''/* DuckGame-Android: readback-blit shared capture buffer + bridge. */
 #include <SDL3/SDL_gpu.h>
+#include <android/log.h>
 static unsigned char *g_DuckGamePixels = NULL;
 static int g_DuckGameW = 0;
 static int g_DuckGameH = 0;
@@ -66,7 +75,7 @@ patch_file(
 #    texture (the final rendered image) into the shared CPU buffer.
 CAPTURE = r'''    /* DuckGame-Android: readback-blit capture of the final frame. */
     if (g_DuckGameCapture) {
-        SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: SDLGPU_SwapBuffers capture reached; fb=%p", (void*)renderer->fauxBackbufferColorTexture);
+        __android_log_print(ANDROID_LOG_INFO, "DuckGame", "SDLGPU_SwapBuffers capture reached; fb=%p", (void*)renderer->fauxBackbufferColorTexture);
         if (renderer->fauxBackbufferColorTexture != NULL) {
             int cw = (int) renderer->fauxBackbufferColorTexture->createInfo.width;
             int ch = (int) renderer->fauxBackbufferColorTexture->createInfo.height;
@@ -77,7 +86,7 @@ CAPTURE = r'''    /* DuckGame-Android: readback-blit capture of the final frame.
                     g_DuckGamePixels = (unsigned char *) SDL_malloc(need);
                     g_DuckGameW = cw;
                     g_DuckGameH = ch;
-                    SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture alloc %dx%d (%zu bytes) ptr=%p", cw, ch, need, (void*)g_DuckGamePixels);
+                    __android_log_print(ANDROID_LOG_INFO, "DuckGame", "capture alloc %dx%d (%zu bytes) ptr=%p", cw, ch, need, (void*)g_DuckGamePixels);
                 }
                 if (g_DuckGamePixels) {
                     SDL_GPUTransferBuffer *tb = SDL_CreateGPUTransferBuffer(
@@ -87,7 +96,7 @@ CAPTURE = r'''    /* DuckGame-Android: readback-blit capture of the final frame.
                             (Uint32) need
                         }
                     );
-                    SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture tb=%p", (void*)tb);
+                    __android_log_print(ANDROID_LOG_INFO, "DuckGame", "capture tb=%p", (void*)tb);
                     if (tb != NULL) {
                         SDL_GPUCommandBuffer *dl = SDL_AcquireGPUCommandBuffer(renderer->device);
                         if (dl != NULL) {
@@ -100,11 +109,11 @@ CAPTURE = r'''    /* DuckGame-Android: readback-blit capture of the final frame.
                             SDL_DownloadFromGPUTexture(cp, &reg, &ti);
                             SDL_EndGPUCopyPass(cp);
                             SDL_SubmitGPUCommandBuffer(dl);
-                            SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture download submitted");
+                            __android_log_print(ANDROID_LOG_INFO, "DuckGame", "capture download submitted");
                         }
                         SDL_WaitForGPUIdle(renderer->device);
                         void *mapped = SDL_MapGPUTransferBuffer(renderer->device, tb, false);
-                        SDL_Log(SDL_LOG_CATEGORY_APPLICATION, "DuckGame: capture mapped=%p", mapped);
+                        __android_log_print(ANDROID_LOG_INFO, "DuckGame", "capture mapped=%p", mapped);
                         if (mapped != NULL) {
                             SDL_memcpy(g_DuckGamePixels, mapped, need);
                             SDL_UnmapGPUTransferBuffer(renderer->device, tb);
@@ -124,31 +133,35 @@ patch_file(
     "\tSDLGPU_INTERNAL_FlushCommands(renderer);\n" + CAPTURE,
 )
 
-# 3. Probe the FNA3D_SwapBuffers dispatcher (FNA3D.c) to confirm the game
-#    actually requests a present, and which driver is active.
+# 3. Probe the FNA3D dispatchers (FNA3D.c) to confirm the game actually
+#    initializes FNA3D and requests presents. Use __android_log_print.
 DISP = os.path.join(ROOT, "..", "FNA", "lib", "FNA3D", "src", "FNA3D.c")
 DISP = os.path.abspath(DISP)
 if os.path.exists(DISP):
-    DISP_ANCHOR = "\tTRACE_SWAPBUFFERS\n"
-    DISP_INSERT = (
+    DLOG = '#include <android/log.h>\n'
+    if DLOG not in io.open(DISP, encoding="utf-8").read():
+        patch_file(DISP, "#include <SDL3/SDL.h>\n", "#include <SDL3/SDL.h>\n" + DLOG)
+    # FNA3D_SwapBuffers dispatcher probe.
+    patch_file(
+        DISP,
+        "\tTRACE_SWAPBUFFERS\n",
         "\tTRACE_SWAPBUFFERS\n"
-        "\tSDL_Log(SDL_LOG_CATEGORY_APPLICATION, \"DuckGame: FNA3D_SwapBuffers called\");\n"
+        "\t__android_log_print(ANDROID_LOG_INFO, \"DuckGame\", \"FNA3D_SwapBuffers called\");\n",
     )
-    patch_file(DISP, DISP_ANCHOR, DISP_INSERT)
-    # Probe FNA3D_CreateDevice dispatcher: is it called, which driver selected?
-    CREATE_ANCHOR = "\tTRACE_CREATEDEVICE\n"
-    CREATE_INSERT = (
+    # FNA3D_CreateDevice dispatcher probe.
+    patch_file(
+        DISP,
+        "\tTRACE_CREATEDEVICE\n",
         "\tTRACE_CREATEDEVICE\n"
-        "\tSDL_Log(SDL_LOG_CATEGORY_APPLICATION, \"DuckGame: FNA3D_CreateDevice called; selectedDriver=%d\", selectedDriver);\n"
+        "\t__android_log_print(ANDROID_LOG_INFO, \"DuckGame\", \"FNA3D_CreateDevice called; selectedDriver=%d\", selectedDriver);\n",
     )
-    patch_file(DISP, CREATE_ANCHOR, CREATE_INSERT)
-    # Probe GPU device creation success in the SDL driver.
-    DEV_ANCHOR = "\trenderer->device = device;\n"
-    DEV_INSERT = (
+    # GPU device creation success probe in the SDL driver.
+    patch_file(
+        SRC,
+        "\trenderer->device = device;\n",
         "\trenderer->device = device;\n"
-        "\tSDL_Log(SDL_LOG_CATEGORY_APPLICATION, \"DuckGame: SDLGPU device created OK\");\n"
+        "\t__android_log_print(ANDROID_LOG_INFO, \"DuckGame\", \"SDLGPU device created OK\");\n",
     )
-    patch_file(SRC, DEV_ANCHOR, DEV_INSERT)
     print("OK: " + DISP + " + device probe")
 else:
     print("SKIP: " + DISP + " (not present)")
