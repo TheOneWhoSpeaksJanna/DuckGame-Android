@@ -135,6 +135,13 @@ if os.path.exists(DISP):
         "\tSDL_Log(SDL_LOG_CATEGORY_APPLICATION, \"DuckGame: FNA3D_SwapBuffers called\");\n"
     )
     patch_file(DISP, DISP_ANCHOR, DISP_INSERT)
+    # Probe FNA3D_CreateDevice dispatcher: is it called, which driver selected?
+    CREATE_ANCHOR = "\tTRACE_CREATEDEVICE\n"
+    CREATE_INSERT = (
+        "\tTRACE_CREATEDEVICE\n"
+        "\tSDL_Log(SDL_LOG_CATEGORY_APPLICATION, \"DuckGame: FNA3D_CreateDevice called; selectedDriver=%d\", selectedDriver);\n"
+    )
+    patch_file(DISP, CREATE_ANCHOR, CREATE_INSERT)
     # Probe GPU device creation success in the SDL driver.
     DEV_ANCHOR = "\trenderer->device = device;\n"
     DEV_INSERT = (
