@@ -72,11 +72,14 @@ jobs:
             LOGCAT_PID=$!
             adb shell am start -n com.duckgame.game/crc644bce61bee332762a.MainActivity
             sleep 50
-            adb exec-out screencap -p > screen.png || true
-            sleep 35
+            adb exec-out screencap -p > screen_early.png || true
+            sleep 40
+            adb exec-out screencap -p > screen_late.png || true
+            # Pull the on-device crash log if one was written.
+            adb pull /data/data/com.duckgame.game/files/ducklog.txt ducklog.txt || true
             kill $LOGCAT_PID 2>/dev/null || true
             echo "=== DuckGame / crash lines ==="
-            grep -E "DuckGame:|FATAL|AndroidRuntime|crash|Fatal signal|SIGSEGV|Exception|SDL" logcat.txt | tail -60
+            grep -E "DuckGame:|FATAL|AndroidRuntime|crash|Fatal signal|SIGSEGV|Exception|SDL|CRASH" logcat.txt | tail -80
             echo "=== process alive? ==="
             adb shell ps 2>/dev/null | grep -c duckgame || echo 0
 
@@ -87,5 +90,7 @@ jobs:
           name: emulator-diagnostics
           path: |
             logcat.txt
-            screen.png
+            screen_early.png
+            screen_late.png
+            ducklog.txt
           if-no-files-found: warn

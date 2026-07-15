@@ -35,6 +35,9 @@ namespace DuckGame.Android
                     System.IO.File.AppendAllText(path, "\n[FATAL " + where + "]\n" + msg + "\n");
                 }
                 catch { }
+                // Also surface to logcat so CI/emulator runs can see it.
+                try { Android.Util.Log.Error("DuckGame", "CRASH " + where + ": " + msg); }
+                catch { }
                 Host?.ShowFatal(msg);
             }
             catch { }
