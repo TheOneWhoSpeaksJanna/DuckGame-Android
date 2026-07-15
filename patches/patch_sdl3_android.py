@@ -465,12 +465,11 @@ void SDL_AndroidSetJavaVM(void *envptr, void *context)
     }
     JNIEnv *env = (JNIEnv *)envptr;
 
-    /* Capture the real running JavaVM (we are already running on the JVM,
-       so JNI_GetCreatedJavaVMs returns the one .NET attached to). */
+    /* Capture the real running JavaVM from the JNIEnv the host passed in.
+       GetJavaVM is a standard JNI call (no extra link lib needed) and the
+       env we receive is already attached to the running JVM. */
     JavaVM *javaVM = NULL;
-    if (JNI_GetCreatedJavaVMs(&javaVM, 1, NULL) > 0 && javaVM) {
-        mJavaVM = javaVM;
-    } else if ((*env)->GetJavaVM(env, &javaVM) >= 0 && javaVM) {
+    if ((*env)->GetJavaVM(env, &javaVM) == JNI_OK && javaVM) {
         mJavaVM = javaVM;
     }
 
