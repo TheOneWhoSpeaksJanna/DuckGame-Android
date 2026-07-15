@@ -349,7 +349,32 @@ else:
     print("SKIP: " + CMAKE + " (already patched)")
 
 # ---------------------------------------------------------------------------
-# 8. JNI_OnLoad is ALREADY exported (in SDL_dynapi.sym). Force the bridge
+# 8b. Exported bridge to send SDL's Android RESUME lifecycle event from the
+#     managed host. Under .NET Android, SDL's Java SDLActivity (which normally
+#     calls nativeResume -> Android_SendLifecycleEvent(RESUME)) never runs, so
+#     the event pump blocks forever in Android_WaitActiveAndLockActivity waiting
+#     for a resume that never comes. We expose a C wrapper and call it once the
+#     surface is ready.
+patch_file(
+    ANDROID_C,
+    "JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(nativeFocusChanged)(\n",
+    "/* DuckGame-Android: exported bridge to deliver SDL's RESUME lifecycle event\n"
+    "   from the managed host (no Java SDLActivity runs under .NET's dlopen). */\n"
+    "__attribute__((visibility(\"default\"), used))\n"
+    "void SDL_AndroidSendResume(void)\n"
+    "{\n"
+    "    Android_SendLifecycleEvent(SDL_ANDROID_LIFECYCLE_RESUME);\n"
+    "}\n\n"
+    "JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(nativeFocusChanged)(\n",
+)
+
+# Keep the new bridge retained + exported by referencing it from JNI_OnLoad.
+patch_file(
+    ANDROID_C,
+    "    (void)SDL_AndroidSetScreenResolution;\n",
+    "    (void)SDL_AndroidSetScreenResolution;\n    (void)SDL_AndroidSendResume;\n",
+)
+
 #    cluster to be retained + exported by referencing all four from it: the
 #    linker keeps everything reachable from an exported symbol, so they
 #    survive --gc-sections and the version script promotes them to dynamic.

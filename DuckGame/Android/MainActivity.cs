@@ -87,6 +87,14 @@ namespace DuckGame.Android
         [DllImport("libSDL3.so")]
         private static extern void SDL_AndroidSetJavaVM(IntPtr env, IntPtr context);
 
+        // Delivers SDL's Android RESUME lifecycle event. Under .NET Android,
+        // SDL's Java SDLActivity (which normally sends this from onResume)
+        // never runs, so without this the SDL event pump blocks forever
+        // waiting for a resume and the game loop never creates the FNA3D
+        // device. We send it once the surface is ready.
+        [DllImport("libSDL3.so")]
+        private static extern void SDL_AndroidSendResume();
+
         // DuckGame-Android readback-blit bridge (see patch_fna3d_capture.py).
         // FNA3D's SDL3 GPU driver hands the final rendered frame to
         // managed code here; on redroid we blit it onto a Canvas View
@@ -284,6 +292,10 @@ namespace DuckGame.Android
                 int h = metrics.HeightPixels;
                 float density = metrics.Density;
                 SDL_AndroidSetScreenResolution(w, h, w, h, density, 60.0f);
+
+                // Deliver SDL's RESUME lifecycle event so its event pump
+                // unblocks and the game loop can create the FNA3D device.
+                SDL_AndroidSendResume();
 
                 Log.Info("DuckGame", "SDL Android surface handed to SDL");
                 _surfaceReady.Set();
