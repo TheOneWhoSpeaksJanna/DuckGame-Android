@@ -36,7 +36,7 @@ namespace DuckGame.Android
                 }
                 catch { }
                 // Also surface to logcat so CI/emulator runs can see it.
-                try { Android.Util.Log.Error("DuckGame", "CRASH " + where + ": " + msg); }
+                try { global::Android.Util.Log.Error("DuckGame", "CRASH " + where + ": " + msg); }
                 catch { }
                 Host?.ShowFatal(msg);
             }
