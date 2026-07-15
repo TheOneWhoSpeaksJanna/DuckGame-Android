@@ -357,7 +357,11 @@ else:
 #     surface is ready.
 patch_file(
     ANDROID_C,
+    "    Android_SendLifecycleEvent(SDL_ANDROID_LIFECYCLE_RESUME);\n"
+    "}\n\n"
     "JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(nativeFocusChanged)(\n",
+    "    Android_SendLifecycleEvent(SDL_ANDROID_LIFECYCLE_RESUME);\n"
+    "}\n\n"
     "/* DuckGame-Android: exported bridge to deliver SDL's RESUME lifecycle event\n"
     "   from the managed host (no Java SDLActivity runs under .NET's dlopen). */\n"
     "__attribute__((visibility(\"default\"), used))\n"
