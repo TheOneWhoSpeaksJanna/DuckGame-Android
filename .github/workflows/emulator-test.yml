@@ -82,6 +82,9 @@ jobs:
             adb exec-out screencap -p > screen_late.png || true
             # Pull the on-device crash log if one was written.
             adb pull /data/data/com.duckgame.game/files/ducklog.txt ducklog.txt || true
+            # Pull native tombstones for the crashing function backtrace.
+            adb root || true
+            adb pull /data/tombstones ./tombstones || true
             kill $LOGCAT_PID 2>/dev/null || true
             echo "=== DuckGame / crash lines ==="
             grep -E "DuckGame:|FATAL|AndroidRuntime|crash|Fatal signal|SIGSEGV|Exception|SDL|CRASH" logcat.txt | tail -80
@@ -98,4 +101,5 @@ jobs:
             screen_early.png
             screen_late.png
             ducklog.txt
+            tombstones
           if-no-files-found: warn
