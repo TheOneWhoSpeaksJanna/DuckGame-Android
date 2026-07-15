@@ -193,6 +193,15 @@ namespace DuckGame.Android
                     ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
             }
 
+            // The game reads its data (Content/, lang.txt, spriteatlas.png,
+            // AddedContent/, ...) via System.IO relative to the current
+            // directory. Those files ship inside the APK as Android assets,
+            // which System.IO cannot read directly, so extract them once to the
+            // app's private files dir and make that the working directory.
+            string dataDir = ExtractGameData();
+            try { System.IO.Directory.SetCurrentDirectory(dataDir); }
+            catch (Exception ex) { Log.Error("DuckGame", "SetCurrentDirectory failed: " + ex); }
+
             // Run the real game loop on a background thread; the main (UI) thread
             // stays free so the surface callback can fire and hand SDL the window.
             var gameThread = new Thread(RunGameLoop)
@@ -201,6 +210,92 @@ namespace DuckGame.Android
                 IsBackground = false
             };
             gameThread.Start();
+        }
+
+        // Copies all bundled APK assets (Content/, lang.txt, spriteatlas.png,
+        // AddedContent/, ...) into the app's private files dir so the game's
+        // System.IO file access can read them. Idempotent: a marker file records
+        // the extracted APK version and re-extracts only when the APK changes.
+        private string ExtractGameData()
+        {
+            string root = FilesDir.AbsolutePath;
+            try
+            {
+                long versionCode = 0;
+                try
+                {
+                    var pi = PackageManager.GetPackageInfo(PackageName, 0);
+                    versionCode = (long)(Build.VERSION.SdkInt >= BuildVersionCodes.P
+                        ? pi.LongVersionCode
+                        : pi.VersionCode);
+                }
+                catch { }
+                // Use the APK's last-modified time so any reinstall re-extracts.
+                long stamp = 0;
+                try { stamp = new Java.IO.File(PackageCodePath).LastModified(); } catch { }
+                string marker = System.IO.Path.Combine(root, ".assets_extracted");
+                string token = versionCode + "_" + stamp;
+                if (System.IO.File.Exists(marker) && System.IO.File.ReadAllText(marker) == token)
+                {
+                    Log.Info("DuckGame", "assets already extracted (" + token + ")");
+                    return root;
+                }
+
+                Log.Info("DuckGame", "extracting game assets to " + root + " ...");
+                CopyAssetDir("", root);
+                System.IO.File.WriteAllText(marker, token);
+                Log.Info("DuckGame", "asset extraction complete");
+            }
+            catch (Exception ex)
+            {
+                Log.Error("DuckGame", "asset extraction failed: " + ex);
+            }
+            return root;
+        }
+
+        // Recursively copies an assets subtree (assetPath, "" = root) into destDir.
+        private void CopyAssetDir(string assetPath, string destDir)
+        {
+            string[] entries;
+            try { entries = Assets.List(assetPath); } catch { entries = null; }
+
+            if (entries == null || entries.Length == 0)
+            {
+                // Leaf: it's a file. Copy it.
+                CopyAssetFile(assetPath, destDir);
+                return;
+            }
+
+            // Some asset "directories" also exist as files; Android's AssetManager
+            // returns children for dirs and an empty list for files. We treat a
+            // non-empty list as a directory.
+            System.IO.Directory.CreateDirectory(destDir);
+            foreach (string entry in entries)
+            {
+                string childAsset = string.IsNullOrEmpty(assetPath) ? entry : assetPath + "/" + entry;
+                string childDest = System.IO.Path.Combine(destDir, entry);
+                CopyAssetDir(childAsset, childDest);
+            }
+        }
+
+        private void CopyAssetFile(string assetPath, string destPath)
+        {
+            if (string.IsNullOrEmpty(assetPath)) return;
+            try
+            {
+                var parent = System.IO.Path.GetDirectoryName(destPath);
+                if (!string.IsNullOrEmpty(parent)) System.IO.Directory.CreateDirectory(parent);
+                using (var inStream = Assets.Open(assetPath))
+                using (var outStream = System.IO.File.Create(destPath))
+                {
+                    inStream.CopyTo(outStream);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Non-fatal: skip unreadable pseudo-entries (e.g. reserved dirs).
+                Log.Warn("DuckGame", "skip asset '" + assetPath + "': " + ex.Message);
+            }
         }
 
         private void RunGameLoop()

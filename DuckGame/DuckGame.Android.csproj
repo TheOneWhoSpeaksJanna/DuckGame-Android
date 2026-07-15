@@ -114,6 +114,10 @@
     <AndroidAsset Include="spriteatlas.png" Link="spriteatlas.png" />
     <AndroidAsset Include="spriteatlas_offsets.txt" Link="spriteatlas_offsets.txt" />
     <AndroidAsset Include="AddedContent/**/*" Link="AddedContent/%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Root game-data files the game reads via System.IO from its working dir -->
+    <AndroidAsset Include="lang.txt" Link="lang.txt" />
+    <AndroidAsset Include="gamecontrollerdb.txt" Link="gamecontrollerdb.txt" />
+    <AndroidAsset Include="MonoFont.ttf" Link="MonoFont.ttf" />
   </ItemGroup>
 
   <!-- Native FNA libs (SDL3/FNA3D/FAudio/theorafile/mojoshader) deployed by CI into libs/arm64-v8a -->
