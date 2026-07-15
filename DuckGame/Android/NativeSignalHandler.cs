@@ -36,10 +36,6 @@ namespace DuckGame.Android
         [DllImport("libc", EntryPoint = "backtrace_symbols")]
         private static extern IntPtr native_backtrace_symbols(IntPtr[] array, int size);
 
-        [DllImport("libc", EntryPoint = "__android_log_print")]
-        private static extern int android_log_print(int prio, string tag, string fmt, string arg);
-
-        private const int LOG_ERROR = 6;
         private const string TAG = "DuckGame";
 
         // The actual native handler (kept as a static method; its function
@@ -53,7 +49,7 @@ namespace DuckGame.Android
                 IntPtr[] frames = new IntPtr[max];
                 int n = native_backtrace(frames, max);
                 string report = "NATIVE CRASH signal " + sig + " (" + SigName(sig) + "), " + n + " frames:";
-                android_log_print(LOG_ERROR, TAG, "%s", report);
+                global::Android.Util.Log.Error(TAG, report);
                 if (n > 0)
                 {
                     IntPtr symbols = native_backtrace_symbols(frames, n);
@@ -65,7 +61,7 @@ namespace DuckGame.Android
                             for (int i = 0; i < n; i++)
                             {
                                 string s = Marshal.PtrToStringAnsi(arr[i]) ?? "??";
-                                android_log_print(LOG_ERROR, TAG, "#%02d %s", i.ToString() + " " + s);
+                                global::Android.Util.Log.Error(TAG, "#" + i + " " + s);
                                 report += "\n#" + i + " " + s;
                             }
                         }
@@ -103,11 +99,11 @@ namespace DuckGame.Android
                 {
                     native_sigaction((int)s, ref act, IntPtr.Zero);
                 }
-                android_log_print(LOG_ERROR, TAG, "NativeSignalHandler installed", "");
+                global::Android.Util.Log.Error(TAG, "NativeSignalHandler installed");
             }
             catch (Exception ex)
             {
-                android_log_print(LOG_ERROR, TAG, "NativeSignalHandler install failed: %s", ex.Message);
+                global::Android.Util.Log.Error(TAG, "NativeSignalHandler install failed: " + ex.Message);
             }
         }
     }
