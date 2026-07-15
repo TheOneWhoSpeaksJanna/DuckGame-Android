@@ -16,24 +16,36 @@ jobs:
   emulator:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
       - name: Download built APK
-        uses: actions/download-artifact@v4
-        with:
-          name: DuckGame-android-apk
-          path: apk
-          run-id: ${{ github.event.workflow_run.id }}
-        continue-on-error: true
+        id: getapk
+        run: |
+          mkdir -p apk
+          # Prefer the artifact from the triggering build; fall back to the
+          # latest published Release APK (always available after a green build).
+          if [ -n "${{ github.event.workflow_run.id }}" ]; then
+            gh run download "${{ github.event.workflow_run.id }}" -n DuckGame-android-apk -D apk || true
+          fi
+          if ! find apk -name '*-Signed.apk' | grep -q .; then
+            echo "Fetching latest release APK..."
+            URL=$(gh release view --json assets -q '.assets[] | select(.name|endswith("-Signed.apk")) | .url' | head -1)
+            gh release download --clobber --dir apk --pattern '*-Signed.apk' || true
+          fi
+          APK=$(find apk -name '*-Signed.apk' | head -1)
+          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Find APK
         id: apk
         run: |
-          APK=$(find apk -name '*-Signed.apk' | head -1)
-          if [ -z "$APK" ]; then
-            echo "No APK artifact found; building one."
-            exit 1
+          APK="${{ steps.getapk.outputs.apk }}"
+          if [ -z "$APK" ] || [ ! -f "$APK" ]; then
+            echo "No APK found."; exit 1
           fi
           echo "apk=$APK" >> "$GITHUB_OUTPUT"
 
