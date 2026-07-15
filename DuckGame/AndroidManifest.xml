@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.duckgame.game"
           android:versionCode="1"
-          android:versionName="1.4.7">
+          android:versionName="1.4.7"
+          android:debuggable="true">
   <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34" />
 
   <!-- Duck Game needs audio + touch + network for LAN play -->
