@@ -71,9 +71,9 @@ jobs:
             adb logcat -v threadtime > logcat.txt &
             LOGCAT_PID=$!
             adb shell am start -n com.duckgame.game/crc644bce61bee332762a.MainActivity
-            sleep 25
+            sleep 50
             adb exec-out screencap -p > screen.png || true
-            sleep 20
+            sleep 35
             kill $LOGCAT_PID 2>/dev/null || true
             echo "=== DuckGame / crash lines ==="
             grep -E "DuckGame:|FATAL|AndroidRuntime|crash|Fatal signal|SIGSEGV|Exception|SDL" logcat.txt | tail -60
