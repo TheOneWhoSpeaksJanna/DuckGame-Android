@@ -526,6 +526,96 @@ for static_line in [
     patch_file(ANDROID_C, static_line, STORAGE_GUARD + static_line)
 
 # ---------------------------------------------------------------------------
+# 11d. Guard every activity/audio/controller-JNI accessor that dereferences
+#     mActivityClass / mAudioManagerClass / mControllerManagerClass.
+#
+#     Under .NET there is no SDL Java activity, so nativeSetupJNI runs with
+#     our Activity class but the mid* method IDs are NULL (our Activity lacks
+#     SDL's Java methods). We reset those classes to NULL in nativeSetupJNI
+#     (below) when the mids are missing; these guards then no-op instead of
+#     crashing the JVM with "mid == null" (e.g. SDL_IsDeXMode during
+#     SDL_VideoQuit).
+ACTIVITY_GUARDS = [
+    ("void Android_JNI_SetActivityTitle(const char *title)", ""),
+    ("void Android_JNI_SetWindowStyle(bool fullscreen)", ""),
+    ("void Android_JNI_MinizeWindow(void)", ""),
+    ("bool Android_JNI_ShouldMinimizeOnFocusLoss(void)", "false"),
+    ("bool Android_JNI_SetClipboardText(const char *text)", "true"),
+    ("char *Android_JNI_GetClipboardText(void)", "SDL_strdup(\"\")"),
+    ("bool Android_JNI_HasClipboardText(void)", "false"),
+    ("int Android_JNI_GetPowerInfo(int *plugged, int *charged, int *battery, int *seconds, int *percent)", "-1"),
+    ("bool SDL_IsAndroidTablet(void)", "false"),
+    ("bool SDL_IsAndroidTV(void)", "false"),
+    ("bool SDL_IsChromebook(void)", "false"),
+    ("bool SDL_IsDeXMode(void)", "false"),
+    ("void SDL_SendAndroidBackButton(void)", ""),
+    ("int Android_JNI_CreateCustomCursor(SDL_Surface *surface, int hot_x, int hot_y)", "0"),
+    ("void Android_JNI_DestroyCustomCursor(int cursorID)", ""),
+    ("bool Android_JNI_SetCustomCursor(int cursorID)", "false"),
+    ("bool Android_JNI_SetSystemCursor(int cursorID)", "false"),
+    ("bool Android_JNI_SupportsRelativeMouse(void)", "false"),
+    ("bool Android_JNI_SetRelativeMouseEnabled(bool enabled)", "false"),
+    ("bool Android_JNI_ShowToast(const char *message, int duration, int gravity, int xOffset, int yOffset)", "false"),
+    ("bool Android_JNI_OpenURL(const char *url)", "false"),
+    ("int Android_JNI_OpenFileDescriptor(const char *uri, const char *mode)", "-1"),
+    ("bool SDL_RequestAndroidPermission(const char *permission, SDL_RequestAndroidPermissionCallback cb, void *userdata)", "false"),
+]
+for sig, ret in ACTIVITY_GUARDS:
+    anchor = sig + "\n{\n"
+    repl = (sig + "\n{\n"
+            "    /* DuckGame-Android: no SDL Java activity (mActivityClass NULL) under .NET. */\n"
+            "    if (!mActivityClass) { return " + ret + "; }\n")
+    patch_file(ANDROID_C, anchor, repl, count=1)
+
+AUDIO_GUARDS = [
+    ("static void Android_JNI_AudioSetThreadPriority(int recording, int device_id)", "mAudioManagerClass"),
+    ("void Android_StartAudioHotplug(SDL_AudioDevice **default_playback, SDL_AudioDevice **default_recording)", "mAudioManagerClass"),
+    ("void Android_StopAudioHotplug(void)", "mAudioManagerClass"),
+    ("void Android_JNI_PollHapticDevices(void)", "mControllerManagerClass"),
+    ("void Android_JNI_HapticRun(int device_id, float intensity, int length)", "mControllerManagerClass"),
+    ("void Android_JNI_HapticStop(int device_id)", "mControllerManagerClass"),
+]
+for sig, cls in AUDIO_GUARDS:
+    anchor = sig + "\n{\n"
+    repl = (sig + "\n{\n"
+            "    /* DuckGame-Android: no SDL Java activity under .NET. */\n"
+            "    if (!" + cls + ") { return; }\n")
+    patch_file(ANDROID_C, anchor, repl, count=1)
+
+# Reset the activity/audio/controller classes to NULL when their method IDs
+# are missing (under .NET there is no SDL Java activity, so the mids are
+# NULL). This makes the guards above correctly no-op.
+patch_file(
+    ANDROID_C,
+    "        __android_log_print(ANDROID_LOG_WARN, \"SDL\", \"Missing some Java callbacks, do you have the latest version of SDLActivity.java?\");\n    }\n\n    checkJNIReady();\n}",
+    "        __android_log_print(ANDROID_LOG_WARN, \"SDL\", \"Missing some Java callbacks, do you have the latest version of SDLActivity.java?\");\n    }\n\n"
+    "    /* DuckGame-Android: under .NET there is no SDL Java activity, so the\n"
+    "       mid* method IDs are NULL. Drop mActivityClass so the activity-JNI\n"
+    "       guards (if (!mActivityClass)) correctly no-op. */\n"
+    "    if (!midIsDeXMode || !midSendMessage || !midGetNativeSurface) {\n"
+    "        mActivityClass = NULL;\n"
+    "    }\n\n"
+    "    checkJNIReady();\n}",
+)
+patch_file(
+    ANDROID_C,
+    "        __android_log_print(ANDROID_LOG_WARN, \"SDL\",\n                            \"Missing some Java callbacks, do you have the latest version of SDLAudioManager.java?\");\n    }\n\n    checkJNIReady();\n}",
+    "        __android_log_print(ANDROID_LOG_WARN, \"SDL\",\n                            \"Missing some Java callbacks, do you have the latest version of SDLAudioManager.java?\");\n    }\n\n"
+    "    if (!midRegisterAudioDeviceCallback || !midUnregisterAudioDeviceCallback || !midAudioSetThreadPriority) {\n"
+    "        mAudioManagerClass = NULL;\n"
+    "    }\n\n"
+    "    checkJNIReady();\n}",
+)
+patch_file(
+    ANDROID_C,
+    "        __android_log_print(ANDROID_LOG_WARN, \"SDL\", \"Missing some Java callbacks, do you have the latest version of SDLControllerManager.java?\");\n    }\n\n    checkJNIReady();\n}",
+    "        __android_log_print(ANDROID_LOG_WARN, \"SDL\", \"Missing some Java callbacks, do you have the latest version of SDLControllerManager.java?\");\n    }\n\n"
+    "    if (!midPollInputDevices || !midPollHapticDevices || !midHapticRun || !midHapticRumble || !midHapticStop) {\n"
+    "        mControllerManagerClass = NULL;\n"
+    "    }\n\n"
+    "    checkJNIReady();\n}",
+)
+
 # 12. DuckGame-Android readback-blit path (for emulators like redroid whose
 #     software compositor cannot present the SDL SurfaceView hardware layer).
 #     When the host calls SDL_DuckGameSetCapture(1), after each GL swap we
