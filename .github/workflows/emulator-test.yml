@@ -66,13 +66,19 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
             adb install -r "${{ steps.apk.outputs.apk }}"
-            adb logcat -c
+            # Stream logcat to a file in the background so an emulator crash
+            # (adb daemon death) doesn't lose the tail.
+            adb logcat -v threadtime > logcat.txt &
+            LOGCAT_PID=$!
             adb shell am start -n com.duckgame.game/crc644bce61bee332762a.MainActivity
-            sleep 40
-            adb logcat -d > logcat.txt
+            sleep 25
             adb exec-out screencap -p > screen.png || true
-            echo "=== DuckGame log lines ==="
-            grep -E "DuckGame:|FATAL|AndroidRuntime|crash|Fatal signal|SIGSEGV" logcat.txt | tail -40
+            sleep 20
+            kill $LOGCAT_PID 2>/dev/null || true
+            echo "=== DuckGame / crash lines ==="
+            grep -E "DuckGame:|FATAL|AndroidRuntime|crash|Fatal signal|SIGSEGV|Exception|SDL" logcat.txt | tail -60
+            echo "=== process alive? ==="
+            adb shell ps 2>/dev/null | grep -c duckgame || echo 0
 
       - name: Upload diagnostics
         if: always()
